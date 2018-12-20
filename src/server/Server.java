@@ -10,13 +10,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import server.model.Client;
 import server.model.Group;
+import server.service.MessageProcessor;
 
 public class Server {
 
   private final int SERVER_PORT = 1337;
 
-  static List<Client> clients = new ArrayList<>();
-  static List<Group> groups = new ArrayList<>();
+  public static List<Client> clients = new ArrayList<>();
+  public static List<Group> groups = new ArrayList<>();
 
   public static void main(String[] args) {
     Server myServer = new Server();
@@ -50,15 +51,15 @@ public class Server {
     }
   }
 
-  static List<String> getUserNames() {
+  public static List<String> getUserNames() {
     return clients.stream().map(Client::getName).collect(Collectors.toList());
   }
 
-  static List<String> getGroupNames() {
+  public static List<String> getGroupNames() {
     return groups.stream().map(Group::getName).collect(Collectors.toList());
   }
 
-  static Group getGroupByName(String groupName) {
+  public static Group getGroupByName(String groupName) {
     for (Group group : groups) {
       if (group.getName().equals(groupName)) {
         return group;
@@ -67,7 +68,7 @@ public class Server {
     return null;
   }
 
-  static Client getClientByName(String clientName) {
+  public static Client getClientByName(String clientName) {
     for (Client client : clients) {
       if (client.getName().equals(clientName)) {
         return client;
