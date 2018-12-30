@@ -38,16 +38,16 @@ public abstract class MessageHandler {
                     handleBroadCastMessage(line);
                     break;
                 case "CLST":
-                    handleClientListMessage();
+                    handleClientListMessage(line);
                     break;
                 case "PMSG":
                     handlePrivateMessage(line.substring(5));
                     break;
                 case "CGRP":
-                    handleCreateGroupMessage(line.substring(5));
+                    handleCreateGroupMessage(line);
                     break;
                 case "GLST":
-                    handleGroupListMessage();
+                    handleGroupListMessage(line);
                     break;
                 case "JGRP":
                     handleJoinGroupMessage(line.substring(5));
@@ -75,17 +75,17 @@ public abstract class MessageHandler {
 
     protected abstract void handleHelloMessage(String line);
 
-    protected abstract void handleQuitMessage() throws IOException;
+    protected abstract void handleQuitMessage();
 
     protected abstract void handleBroadCastMessage(String line);
 
-    protected abstract void handleClientListMessage();
+    protected abstract void handleClientListMessage(String line);
 
     protected abstract void handlePrivateMessage(String line);
 
     protected abstract void handleCreateGroupMessage(String line);
 
-    protected abstract void handleGroupListMessage();
+    protected abstract void handleGroupListMessage(String line);
 
     protected abstract void handleJoinGroupMessage(String line);
 

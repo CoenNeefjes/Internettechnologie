@@ -14,6 +14,7 @@ public class ClientApplication {
     public static void main(String[] args) {
         try {
             Socket socket = new Socket(InetAddress.getLocalHost(), 1337);
+            System.out.println("Connected to server");
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(socket.getOutputStream());

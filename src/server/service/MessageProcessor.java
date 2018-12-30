@@ -87,14 +87,18 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
 
     @Override
-    protected void handleQuitMessage() throws IOException {
-        Server.clients.remove(client);
-        sendMessage(MessageConstructor.quitMessage(), writer);
-        socket.close();
+    protected void handleQuitMessage() {
+        try {
+            Server.clients.remove(client);
+            sendMessage(MessageConstructor.quitMessage(), writer);
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    protected void handleClientListMessage() {
+    protected void handleClientListMessage(String line) {
         String clientListString = "";
         for (Client client : Server.clients) {
             clientListString += client.getName() + ", ";
@@ -105,6 +109,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     @Override
     protected void handlePrivateMessage(String line) {
         String recipientName = line.split(" ")[0];
+        System.out.println("HandlePrivateMessage for " + recipientName);
 
         // Try to get the client
         Client client = Server.getClientByName(recipientName);
@@ -126,18 +131,23 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
 
     @Override
-    protected void handleCreateGroupMessage(String groupName) {
+    protected void handleCreateGroupMessage(String line) {
         //TODO: check if groupName is valid string
-
-        if (!Server.getGroupNames().contains(groupName)) {
-            Server.groups.add(new Group(groupName, client));
-        } else {
-            sendMessage(ErrorMessageConstructor.groupNameAlreadyExistsError(), writer);
+        String groupName = line.substring(5);
+        try {
+            if (!Server.getGroupNames().contains(groupName)) {
+                Server.groups.add(new Group(groupName, client));
+                returnOkMessage(line);
+            } else {
+                sendMessage(ErrorMessageConstructor.groupNameAlreadyExistsError(), writer);
+            }
+        } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
     }
 
     @Override
-    protected void handleGroupListMessage() {
+    protected void handleGroupListMessage(String line) {
         String groupListString = "";
         for (Group group : Server.groups) {
             groupListString += group.getName() + ", ";
@@ -182,6 +192,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
                                 e.printStackTrace();
                             }
                         });
+            } else {
+                sendMessage(ErrorMessageConstructor.userNotInGroupError(), writer);
             }
         } else {
             sendMessage(ErrorMessageConstructor.groupNotFoundError(), writer);
@@ -196,8 +208,16 @@ public class MessageProcessor extends MessageHandler implements Runnable {
         if (group != null) {
             // Check if user was in group
             if (group.getGroupMemberByName(client.getName()) != null) {
+                // If the group owner leaves or the group becomes empty, destroy group
+                if (group.isOwner(client) || group.getGroupMembers().isEmpty()) {
+                    Server.groups.remove(group);
+                }
                 group.removeGroupMember(client);
-                sendMessage(line, writer);
+                try {
+                    returnOkMessage(line);
+                } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                }
                 //TODO: let the group know the user disconnected
             } else {
                 sendMessage(ErrorMessageConstructor.userNotInGroupError(), writer);
