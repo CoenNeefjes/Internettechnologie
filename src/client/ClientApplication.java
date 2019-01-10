@@ -1,5 +1,6 @@
 package client;
 
+import client.gui.ClientGui;
 import client.service.MessageProcessor;
 
 import java.io.BufferedReader;
@@ -12,6 +13,8 @@ import java.net.Socket;
 public class ClientApplication {
 
     public static void main(String[] args) {
+        ClientGui clientGui = new ClientGui();
+        clientGui.setVisible(true);
         try {
             Socket socket = new Socket(InetAddress.getLocalHost(), 1337);
             System.out.println("Connected to server");
