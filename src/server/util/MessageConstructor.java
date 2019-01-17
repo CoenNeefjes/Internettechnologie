@@ -1,5 +1,6 @@
 package server.util;
 
+import general.MessageMD5Encoder;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -7,12 +8,8 @@ import java.util.Base64;
 
 public class MessageConstructor {
 
-    public static String okMessage(String msg)
-            throws UnsupportedEncodingException, NoSuchAlgorithmException {
-        byte[] bytesOfMessage = msg.getBytes("UTF-8");
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        byte[] encoded = Base64.getEncoder().encode(md.digest(bytesOfMessage));
-        return "+OK " + new String(encoded);
+    public static String okMessage(String message) {
+        return "+OK " + MessageMD5Encoder.encode(message);
     }
 
     public static String broadcastMessage(String sender, String msg) {
@@ -32,7 +29,7 @@ public class MessageConstructor {
         if (groupListString.length() > 0) {
             result = "GLST " + groupListString.substring(0, groupListString.length() - 2);
         } else {
-            result = "GLST no groups were found";
+            result = "GLST";
         }
         return result;
     }

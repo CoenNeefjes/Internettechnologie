@@ -5,6 +5,7 @@ import client.gui.ClientGui;
 import client.gui.LoginScreen;
 import general.MessageHandler;
 
+import general.MessageMD5Encoder;
 import general.MsgType;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,11 +17,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import server.Server;
 
 public class MessageProcessor extends MessageHandler implements Runnable {
 
   private ClientGui clientGui;
+
+  private CopyOnWriteArrayList<String> sentCommands = new CopyOnWriteArrayList<>();
 
   public MessageProcessor(Socket serverSocket) throws IOException {
     super(serverSocket);
@@ -35,20 +39,21 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
-  private void sendMessage(String msg) {
+  public void sendMessage(String msg) {
     writer.println(msg);
     writer.flush();
+    sentCommands.add(msg);
   }
 
   @Override
   protected void handleHelloMessage(String line) {
-    clientGui = new ClientGui(writer);
+    clientGui = new ClientGui(this);
     System.out.println("Starting login screen");
     LoginScreen loginScreen = new LoginScreen(writer, (userName) -> {
       System.out.println("Starting client Gui");
       clientGui.setUserName(userName);
       clientGui.setVisible(true);
-      clientGui.setRecipient("All", MsgType.BCST);
+      clientGui.setRecipient("All");
     });
     loginScreen.setVisible(true);
   }
@@ -92,12 +97,19 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleGroupListMessage(String line) {
-    Set<String> groups = new HashSet<>(Arrays.asList(line.substring(5).split(", ")));
-    ClientApplication.groupNames.addAll(groups);
+    if (line.length() < 5) {
+      // There are no more groups
+      ClientApplication.groupNames.clear();
+      ClientApplication.subscribedGroups.clear();
+      ClientApplication.myGroups.clear();
+    } else {
+      // Replace all groups with current information
+      ClientApplication.groupNames = new HashSet<>(Arrays.asList(line.substring(5).split(", ")));
+      // Check if our locally followed groups still exist
+      ClientApplication.subscribedGroups.retainAll(ClientApplication.groupNames);
+      ClientApplication.myGroups.retainAll(ClientApplication.groupNames);
+    }
     clientGui.updateGroupList();
-
-
-    System.out.println("Current groups: " + line.substring(5));
   }
 
   @Override
@@ -128,7 +140,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handlePingMessage() {
-    sendMessage("PONG");
+    writer.println("PONG");
+    writer.flush();
   }
 
   @Override
@@ -139,6 +152,29 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleErrorMessage(String msg) {
-    clientGui.errorBox(msg, "Error");
+    clientGui.errorBox(msg);
   }
+
+  @Override
+  protected void handleOkMessage(String line) {
+    for (String command: sentCommands) {
+      if (MessageMD5Encoder.encode(command).equals(line)) {
+        switch (command.split(" ")[0]) {
+          case "JGRP":
+            ClientApplication.subscribedGroups.add(command.substring(5));
+            break;
+          case "CGRP":
+            ClientApplication.subscribedGroups.add(command.substring(5));
+            ClientApplication.myGroups.add(command.substring(5));
+            break;
+          case "LGRP":
+            ClientApplication.subscribedGroups.remove(command.substring(5));
+            ClientApplication.myGroups.remove(command.substring(5));
+            break;
+        }
+        sentCommands.remove(command);
+      }
+    }
+  }
+
 }

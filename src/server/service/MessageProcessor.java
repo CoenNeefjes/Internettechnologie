@@ -10,6 +10,7 @@ import server.util.MessageConstructor;
 import java.io.*;
 import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
+import server.util.StringValidator;
 
 public class MessageProcessor extends MessageHandler implements Runnable {
 
@@ -33,8 +34,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     writer.flush();
   }
 
-  private void returnOkMessage(String line)
-      throws UnsupportedEncodingException, NoSuchAlgorithmException {
+  private void returnOkMessage(String line) {
     sendMessage(MessageConstructor.okMessage(line), writer);
   }
 
@@ -51,12 +51,18 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     try {
       if (client != null) {
         sendMessage(ErrorMessageConstructor.alreadyLoggedInError(), writer);
+        //TODO: not close the connection
         socket.close();
         return;
       }
 
       String userName = line.substring(5);
-      //TODO: check if username is valid string
+      if (!StringValidator.validateString(userName)) {
+        sendMessage(ErrorMessageConstructor.invalidNameError(userName), writer);
+        //TODO: not close the connection
+        socket.close();
+        return;
+      }
 
       if (!Server.getUserNames().contains(userName)) {
         this.client = new Client(socket, userName);
@@ -71,7 +77,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
         sendMessage(ErrorMessageConstructor.alreadyLoggedInError(), writer);
         socket.close();
       }
-    } catch (IOException | NoSuchAlgorithmException e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
   }
@@ -81,7 +87,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     try {
       returnOkMessage(line);
       broadcastMessage(line.substring(5));
-    } catch (NoSuchAlgorithmException | IOException e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
   }
@@ -136,20 +142,19 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleCreateGroupMessage(String line) {
-    //TODO: check if groupName is valid string
     String groupName = line.substring(5);
-    try {
-      if (!Server.getGroupNames().contains(groupName)) {
-        // Create the group
-        Server.groups.add(new Group(groupName, client));
-        returnOkMessage(line);
-        // Send every client an updated group list
-        broadCastGroupList();
-      } else {
-        sendMessage(ErrorMessageConstructor.groupNameAlreadyExistsError(), writer);
-      }
-    } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
-      e.printStackTrace();
+    if (!StringValidator.validateString(groupName)) {
+      sendMessage(ErrorMessageConstructor.invalidNameError(groupName), writer);
+      return;
+    }
+    if (!Server.getGroupNames().contains(groupName)) {
+      // Create the group
+      Server.groups.add(new Group(groupName, client));
+      returnOkMessage(line);
+      // Send every client an updated group list
+      broadCastGroupList();
+    } else {
+      sendMessage(ErrorMessageConstructor.groupNameAlreadyExistsError(), writer);
     }
   }
 
@@ -166,7 +171,13 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   protected void handleJoinGroupMessage(String groupName) {
     Group group = Server.getGroupByName(groupName);
     if (group != null) {
-      group.addGroupMember(client);
+      if (!group.getGroupMemberNames().contains(client.getName())) {
+        group.addGroupMember(client);
+      } else {
+        // Client is already in group
+        sendMessage(ErrorMessageConstructor.clientAlreadyInGroupError(), writer);
+      }
+
     } else {
       sendMessage(ErrorMessageConstructor.groupNotFoundError(), writer);
     }
@@ -175,10 +186,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handleGroupMessage(String line) {
     String groupName = line.split(" ")[0];
-    String sender = line.split(" ")[1];
-    String message = line.substring(groupName.length() + sender.length() + 2);
+    String message = line.substring(groupName.length() + 1);
 
-    System.out.println("HandleGroupMessage: groupName=" + groupName + ", sender=" + sender + ", message=" + message);
+    System.out.println("HandleGroupMessage: groupName=" + groupName + ", sender=" + client.getName() + ", message=" + message);
 
     // Try to get the group
     Group group = Server.getGroupByName(groupName);
@@ -199,7 +209,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
           }
         });
       } else {
-        sendMessage(ErrorMessageConstructor.userNotInGroupError(), writer);
+        sendMessage(ErrorMessageConstructor.clientNotInGroupError(), writer);
       }
     } else {
       sendMessage(ErrorMessageConstructor.groupNotFoundError(), writer);
@@ -222,14 +232,10 @@ public class MessageProcessor extends MessageHandler implements Runnable {
           broadCastGroupList();
         }
         group.removeGroupMember(client);
-        try {
-          returnOkMessage(line);
-        } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
-          e.printStackTrace();
-        }
+        returnOkMessage(line);
         //TODO: let the group know the user disconnected
       } else {
-        sendMessage(ErrorMessageConstructor.userNotInGroupError(), writer);
+        sendMessage(ErrorMessageConstructor.clientNotInGroupError(), writer);
       }
     } else {
       sendMessage(ErrorMessageConstructor.groupNotFoundError(), writer);
@@ -257,7 +263,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
           //TODO: send a message to the client that he is removed
           //TODO: send a message to the group the client is removed
         } else {
-          sendMessage(ErrorMessageConstructor.userNotInGroupError(), writer);
+          sendMessage(ErrorMessageConstructor.clientNotInGroupError(), writer);
         }
       } else {
         sendMessage(ErrorMessageConstructor.notOwnerOfGroupError(), writer);
@@ -283,6 +289,12 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     // Server should not receive error message
     System.out.println("Server received error message, this should not happen");
     System.out.println("Error message is: " + line);
+  }
+
+  @Override
+  protected void handleOkMessage(String line) {
+    // Server should not receive error message
+    System.out.println("Server received ok message, this should not happen");
   }
 
   private void broadCastClientList() throws IOException {

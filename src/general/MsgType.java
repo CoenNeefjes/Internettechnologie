@@ -6,5 +6,6 @@ public enum MsgType {
   PMSG,
   GMSG,
   CGRP,
-  JGRP
+  JGRP,
+  LGRP
 }

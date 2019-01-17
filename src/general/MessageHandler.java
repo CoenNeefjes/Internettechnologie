@@ -69,6 +69,8 @@ public abstract class MessageHandler {
           break;
         case "-ERR":
           handleErrorMessage(line.substring(5));
+        case "+OK":
+          handleOkMessage(line.substring(4));
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -102,5 +104,7 @@ public abstract class MessageHandler {
   protected abstract void handlePongMessage();
 
   protected abstract void handleErrorMessage(String line);
+
+  protected abstract void handleOkMessage(String line);
 
 }

@@ -1,10 +1,14 @@
 package client.gui;
 
 import client.ClientApplication;
+import client.service.MessageProcessor;
+import general.MessageHandler;
 import general.MsgType;
 import java.awt.event.ActionEvent;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -28,10 +32,10 @@ public class ClientGui extends JFrame {
   private JTextArea recipient;
   private JButton addGroupButton;
   private JButton joinGroupButton;
+  private JButton leaveGroupButton;
 
-  public ClientGui(PrintWriter writer) {
-    this.writer = writer;
-
+  public ClientGui(MessageProcessor messageProcessor) {
+    this.messageProcessor = messageProcessor;
     add(rootPanel);
 
     setTitle("ClientGui");
@@ -44,13 +48,13 @@ public class ClientGui extends JFrame {
     sendButton.addActionListener(this::sendMessage);
     addGroupButton.addActionListener(this::createGroup);
     joinGroupButton.addActionListener(this::joinGroup);
+    leaveGroupButton.addActionListener(this::leaveGroup);
 
     updateClientList();
   }
 
   /* -------------- Variables -------------- */
-  private MsgType msgType;
-  private PrintWriter writer;
+  private MessageProcessor messageProcessor;
   private String userName;
 
   /* -------------- Setters -------------- */
@@ -58,10 +62,7 @@ public class ClientGui extends JFrame {
     this.userName = userName;
   }
 
-  public void setRecipient(String text, MsgType msgType) {
-    this.msgType = msgType;
-    recipient.setText(text);
-  }
+  public void setRecipient(String text) { recipient.setText(text); }
 
   public void updateClientList() {
     String result = "All\n";
@@ -74,7 +75,14 @@ public class ClientGui extends JFrame {
   public void updateGroupList() {
     String result = "";
     for (String group : ClientApplication.groupNames) {
-      result += group + "\n";
+      result += group;
+      if (ClientApplication.subscribedGroups.contains(group)) {
+        result += " (joined)";
+      }
+      if (ClientApplication.myGroups.contains(group)) {
+        result += " (admin)";
+      }
+      result += "\n";
     }
     groupList.setText(result);
   }
@@ -97,37 +105,46 @@ public class ClientGui extends JFrame {
   private void sendMessage(ActionEvent e) {
     String recipient = this.recipient.getText();
     if (recipient.equals("All")) {
-      writer.println(MsgType.BCST + " " + textInput.getText());
+      messageProcessor.sendMessage(MsgType.BCST + " " + textInput.getText());
     } else if (ClientApplication.clientNames.contains(recipient) && !recipient.equals(userName)) {
-
-      writer.println(MsgType.PMSG + " " + recipient + " " + textInput.getText());
+      messageProcessor.sendMessage(MsgType.PMSG + " " + recipient + " " + textInput.getText());
       chatBox.setText(
-          chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + msgType + " "
+          chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + MsgType.PMSG + " "
               + "You " + "to " + recipient + ": " + textInput.getText() + "\n");
 
     } else if (ClientApplication.groupNames.contains(recipient)) {
-      writer.println(MsgType.GMSG + " " + recipient + " " + userName + " " + textInput.getText());
+      messageProcessor.sendMessage(MsgType.GMSG + " " + recipient + " " + textInput.getText());
     } else {
-      errorBox("Recipient is not in any list", "Error");
+      errorBox("Recipient is not in any list");
       return;
     }
-    writer.flush();
     textInput.setText("");
   }
 
   private void createGroup(ActionEvent e) {
-    writer.println(MsgType.CGRP + " " + groupBox());
-    writer.flush();
+    String groupName = groupBox();
+    if (groupName != null) {
+      messageProcessor.sendMessage(MsgType.CGRP + " " + groupName);
+    }
   }
 
   private void joinGroup(ActionEvent e) {
-    writer.println(MsgType.JGRP + " " + groupBox());
-    writer.flush();
+    String groupName = groupBox();
+    if (groupName != null) {
+      messageProcessor.sendMessage(MsgType.JGRP + " " + groupName);
+    }
+  }
+
+  private void leaveGroup(ActionEvent e) {
+    String groupName = groupBox();
+    if (groupName != null) {
+      messageProcessor.sendMessage(MsgType.LGRP + " " + groupName);
+    }
   }
 
   /* -------------- UI Components -------------- */
-  public void errorBox(String infoMessage, String titleBar) {
-    JOptionPane.showMessageDialog(null, infoMessage, "InfoBox: " + titleBar,
+  public void errorBox(String infoMessage) {
+    JOptionPane.showMessageDialog(null, infoMessage, "Error",
         JOptionPane.INFORMATION_MESSAGE);
   }
 

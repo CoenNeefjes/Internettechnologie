@@ -2,6 +2,7 @@ package server;
 
 import server.model.Client;
 import server.model.Group;
+import server.util.StringValidator;
 
 public class test {
 
@@ -11,5 +12,7 @@ public class test {
 
     Group group = new Group("Group1", client1);
     System.out.println(group.isOwner(client1));
+
+    System.out.println(StringValidator.validateString("Coen neefjes6"));
   }
 }

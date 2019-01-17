@@ -14,8 +14,6 @@ public class ClientApplication {
   public static Set<String> subscribedGroups = new HashSet<>();
   public static Set<String> myGroups = new HashSet<>();
 
-  //TODO: keep track of the messages sent, do something with the local subscribedgroups and mygroups if the messages were successful
-
   public static void main(String[] args) {
     try {
       Socket socket = new Socket(InetAddress.getLocalHost(), 1337);

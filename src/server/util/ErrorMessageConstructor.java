@@ -18,12 +18,16 @@ public class ErrorMessageConstructor {
     return "-ERR group not found";
   }
 
-  public static String userNotInGroupError() {
+  public static String clientNotInGroupError() {
     return "-ERR user is not in this group";
   }
+
+  public static String invalidNameError(String name) { return "-ERR " + name + " is not a valid name"; }
 
   public static String notOwnerOfGroupError() {
     return "-ERR you are not the owner of the group";
   }
+
+  public static String clientAlreadyInGroupError() { return "-ERR you are already in this group"; }
 
 }
