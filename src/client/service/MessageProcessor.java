@@ -34,7 +34,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   public void run() {
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-    while (socket.isConnected()) {
+    while (socket.isConnected() && !socket.isClosed()) {
       receiveMessage(reader);
     }
   }
@@ -48,7 +48,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handleHelloMessage(String line) {
     clientGui = new ClientGui(this);
-    LoginScreen loginScreen = new LoginScreen(writer, (userName) -> {
+    LoginScreen loginScreen = new LoginScreen(this, (userName) -> {
       clientGui.setUserName(userName);
       clientGui.setTitle(userName);
       clientGui.setVisible(true);
@@ -58,9 +58,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   }
 
   @Override
-  protected void handleQuitMessage() {
-    // Client should not receive quit message
-    System.out.println("Client received QUIT message, this should not happen");
+  protected void handleQuitMessage() throws IOException {
+    socket.close();
   }
 
   @Override
@@ -183,6 +182,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       }
     }
     System.out.println("Unknown +OK message received");
+    //TODO: find out where last unknown +OK comes from
   }
 
 }

@@ -79,7 +79,7 @@ public abstract class MessageHandler {
 
   protected abstract void handleHelloMessage(String line);
 
-  protected abstract void handleQuitMessage();
+  protected abstract void handleQuitMessage() throws IOException;
 
   protected abstract void handleBroadCastMessage(String line);
 

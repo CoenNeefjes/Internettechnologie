@@ -96,26 +96,22 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   }
 
   @Override
-  protected void handleQuitMessage() {
-    try {
-      // Send response QUIT message to the user
-      sendMessage(MessageConstructor.quitMessage(), writer);
-      // Remove client from groups
-      Server.groups.forEach(group -> {
-        if (group.getGroupMembers().contains(client)) {
-          handleLeaveGroupMessage("LGRP " + group.getName());
-        }
-      });
-      // Remove the client from the server
-      Server.clients.remove(client);
-      Server.receivedPongPerClient.remove(client.getName());
-      // Send an updated clientList to every user
-      broadCastClientList();
-      // Close the connection
-      socket.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+  protected void handleQuitMessage() throws IOException {
+    // Send response QUIT message to the user
+    sendMessage(MessageConstructor.quitMessage(), writer);
+    // Remove client from groups
+    Server.groups.forEach(group -> {
+      if (group.getGroupMembers().contains(client)) {
+        handleLeaveGroupMessage("LGRP " + group.getName());
+      }
+    });
+    // Remove the client from the server
+    Server.clients.remove(client);
+    Server.receivedPongPerClient.remove(client.getName());
+    // Send an updated clientList to every user
+    broadCastClientList();
+    // Close the connection
+    socket.close();
   }
 
   @Override
@@ -352,7 +348,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   private void notifyClientOfKick(Client client, String groupName) {
     try {
-      sendMessage(MessageConstructor.notifyClientOfKickMessage(groupName), new PrintWriter(client.getClientSocket().getOutputStream()));
+      sendMessage(MessageConstructor.notifyClientOfKickMessage(groupName),
+          new PrintWriter(client.getClientSocket().getOutputStream()));
     } catch (IOException e) {
       e.printStackTrace();
     }

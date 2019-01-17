@@ -1,6 +1,8 @@
 package client.gui;
 
 import client.LoggedInCallBack;
+import client.service.MessageProcessor;
+import general.MsgType;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.io.PrintWriter;
@@ -8,6 +10,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.WindowConstants;
 
 public class LoginScreen extends JFrame {
 
@@ -15,25 +18,26 @@ public class LoginScreen extends JFrame {
   private JPanel panel1;
   private JButton loginButton;
 
-  private PrintWriter writer;
+  private MessageProcessor messageProcessor;
 
   private LoggedInCallBack startClientGuiCallBack;
 
-  public LoginScreen(PrintWriter writer, LoggedInCallBack callBack) {
+  public LoginScreen(MessageProcessor messageProcessor, LoggedInCallBack callBack) {
     this.startClientGuiCallBack = callBack;
-    this.writer = writer;
+    this.messageProcessor = messageProcessor;
     add(panel1);
 
     setTitle("ClientGui");
-    setSize(600, 400);
+    setSize(300, 200);
+
+    this.setLocationRelativeTo(null);
 
     loginButton.addActionListener(this::sendMessage);
   }
 
   private void sendMessage(ActionEvent e) {
     String userName = textField1.getText();
-    writer.println("HELO " + userName);
-    writer.flush();
+    messageProcessor.sendMessage(MsgType.HELO + " " + userName);
     dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
     startClientGuiCallBack.startClientGui(userName);
   }

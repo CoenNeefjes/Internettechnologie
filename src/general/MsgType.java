@@ -9,5 +9,6 @@ public enum MsgType {
   JGRP,
   LGRP,
   KGCL,
-  QUIT
+  QUIT,
+  HELO
 }

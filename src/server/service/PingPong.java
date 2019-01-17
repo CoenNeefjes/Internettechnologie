@@ -27,6 +27,7 @@ public class PingPong implements Runnable {
 
     while (clientSocket.isConnected() && !clientSocket.isClosed()) {
       try {
+        System.out.println("sending ping");
         // We haven't received the PONG yet
         Server.receivedPongPerClient.put(client.getName(), false);
 
@@ -38,8 +39,9 @@ public class PingPong implements Runnable {
         Thread.sleep(3000);
 
         // Check if we received the PONG message
-        if (!Server.receivedPongPerClient.get(client.getName())) {
-          System.out.println(client.getName() + " has not sent a PONG in time, terminating connection");
+        if (Server.receivedPongPerClient.get(client.getName()) != null
+            && !Server.receivedPongPerClient.get(client.getName())) {
+          System.out.println(client.getName() + " sent no PONG, terminating connection");
           Server.clients.remove(client);
           Server.receivedPongPerClient.remove(client.getName());
           //TODO: somehow do this via the messageProcessor
