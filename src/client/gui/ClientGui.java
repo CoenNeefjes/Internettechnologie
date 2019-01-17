@@ -6,11 +6,14 @@ import general.MsgType;
 import java.awt.event.ActionEvent;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.WindowConstants;
 
@@ -30,22 +33,26 @@ public class ClientGui extends JFrame {
   private JButton addGroupButton;
   private JButton joinGroupButton;
   private JButton leaveGroupButton;
+  private JButton kickGroupMemberButton;
+  private JButton quitButton;
 
   public ClientGui(MessageProcessor messageProcessor) {
     this.messageProcessor = messageProcessor;
     add(rootPanel);
 
     setTitle("ClientGui");
-    setSize(600, 400);
+    setSize(900, 500);
 
-//    recipient.setEditable(false);
     clientList.setEditable(false);
     groupList.setEditable(false);
     chatBox.setEditable(false);
+
     sendButton.addActionListener(this::sendMessage);
     addGroupButton.addActionListener(this::createGroup);
     joinGroupButton.addActionListener(this::joinGroup);
     leaveGroupButton.addActionListener(this::leaveGroup);
+    quitButton.addActionListener(this::quit);
+    kickGroupMemberButton.addActionListener(this::kickGroupMember);
 
     this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -150,6 +157,17 @@ public class ClientGui extends JFrame {
     }
   }
 
+  private void quit(ActionEvent e) {
+    messageProcessor.sendMessage(MsgType.QUIT.toString());
+  }
+
+  private void kickGroupMember(ActionEvent e) {
+    String groupNameClientName = kickGroupMemberBox();
+    if (groupNameClientName != null) {
+      messageProcessor.sendMessage(MsgType.KGCL + " " + groupNameClientName);
+    }
+  }
+
   /* -------------- UI Components -------------- */
   public void errorBox(String infoMessage) {
     JOptionPane.showMessageDialog(null, infoMessage, "Error",
@@ -158,6 +176,27 @@ public class ClientGui extends JFrame {
 
   private String groupBox() {
     return JOptionPane.showInputDialog("Enter group name: ");
+  }
+
+  private String kickGroupMemberBox() {
+    JTextField groupNameField = new JTextField(5);
+    JTextField clientNameField = new JTextField(5);
+
+    JPanel myPanel = new JPanel();
+    myPanel.add(new JLabel("Group name:"));
+    myPanel.add(groupNameField);
+    myPanel.add(Box.createHorizontalStrut(15)); // a spacer
+    myPanel.add(new JLabel("Client name:"));
+    myPanel.add(clientNameField);
+
+    int result = JOptionPane.showConfirmDialog(null, myPanel,
+        "Enter the name and group of the person to kick", JOptionPane.OK_CANCEL_OPTION);
+
+    if (result == JOptionPane.OK_OPTION) {
+      return groupNameField.getText() + " " + clientNameField.getText();
+    } else {
+      return null;
+    }
   }
 
   /* -------------- Logic Methods -------------- */

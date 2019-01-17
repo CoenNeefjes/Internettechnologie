@@ -48,8 +48,9 @@
                   <component id="19e95" class="javax.swing.JTextArea" binding="textInput">
                     <constraints>
                       <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                        <preferred-size width="150" height="20"/>
-                        <maximum-size width="-1" height="20"/>
+                        <minimum-size width="300" height="-1"/>
+                        <preferred-size width="-1" height="20"/>
+                        <maximum-size width="300" height="20"/>
                       </grid>
                     </constraints>
                     <properties/>
@@ -65,7 +66,7 @@
                   <component id="41202" class="javax.swing.JTextArea" binding="recipient">
                     <constraints>
                       <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false">
-                        <preferred-size width="75" height="50"/>
+                        <preferred-size width="-1" height="50"/>
                         <maximum-size width="-1" height="20"/>
                       </grid>
                     </constraints>
@@ -84,7 +85,7 @@
                   <component id="1b0b5" class="javax.swing.JTextPane" binding="chatBox">
                     <constraints>
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                        <minimum-size width="-1" height="250"/>
+                        <minimum-size width="600" height="400"/>
                       </grid>
                     </constraints>
                     <properties/>
@@ -105,7 +106,7 @@
             <properties/>
             <border type="none"/>
             <children>
-              <grid id="301d2" binding="clientsPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="301d2" binding="clientsPanel" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -115,7 +116,7 @@
                 <children>
                   <component id="8604f" class="javax.swing.JLabel">
                     <constraints>
-                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="Online Clients"/>
@@ -123,15 +124,23 @@
                   </component>
                   <component id="3930a" class="javax.swing.JTextPane" binding="clientList">
                     <constraints>
-                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                      <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
                         <preferred-size width="150" height="50"/>
                       </grid>
                     </constraints>
                     <properties/>
                   </component>
+                  <component id="e4a3a" class="javax.swing.JButton" binding="quitButton">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <text value="Quit"/>
+                    </properties>
+                  </component>
                 </children>
               </grid>
-              <grid id="3a3f2" binding="groupsPanel" layout-manager="GridLayoutManager" row-count="5" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="3a3f2" binding="groupsPanel" layout-manager="GridLayoutManager" row-count="6" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -177,6 +186,14 @@
                     </constraints>
                     <properties>
                       <text value="Leave Group"/>
+                    </properties>
+                  </component>
+                  <component id="6545a" class="javax.swing.JButton" binding="kickGroupMemberButton">
+                    <constraints>
+                      <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <text value="Kick Group Member"/>
                     </properties>
                   </component>
                 </children>

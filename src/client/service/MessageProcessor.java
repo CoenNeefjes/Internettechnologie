@@ -73,12 +73,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleClientListMessage(String line) {
-    Set<String> clients = new HashSet<>(Arrays.asList(line.substring(5).split(", ")));
-    ClientApplication.clientNames.addAll(clients);
+    ClientApplication.clientNames = new HashSet<>(Arrays.asList(line.substring(5).split(", ")));
     clientGui.updateClientList();
-
-
-    System.out.println("Online clients: " + line.substring(5));
   }
 
   @Override
@@ -183,8 +179,10 @@ public class MessageProcessor extends MessageHandler implements Runnable {
         }
         sentCommands.remove(command);
         clientGui.updateGroupList();
+        return;
       }
     }
+    System.out.println("Unknown +OK message received");
   }
 
 }

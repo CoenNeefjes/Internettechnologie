@@ -47,11 +47,11 @@ public class MessageConstructor {
   }
 
   public static String notifyGroupOfKickMessage(String groupName, String clientName) {
-    return "KGCL" + groupName + " " + clientName;
+    return "KGCL " + groupName + " " + clientName;
   }
 
   public static String notifyClientOfKickMessage(String groupName) {
-    return "KGCL" + groupName;
+    return "KGCL " + groupName;
   }
 
 }

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import server.model.Client;
 import server.model.Group;
@@ -19,7 +20,7 @@ public class Server {
   private final int SERVER_PORT = 1337;
 
   public static List<Client> clients = new ArrayList<>();
-  public static List<Group> groups = new ArrayList<>();
+  public static CopyOnWriteArrayList<Group> groups = new CopyOnWriteArrayList<>();
   public static Map<String, Boolean> receivedPongPerClient = new HashMap<>();
 
   public static void main(String[] args) {

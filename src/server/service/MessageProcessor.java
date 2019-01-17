@@ -74,6 +74,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
         heartbeatThread.start();
         // Send an updated clientList to every user
         broadCastClientList();
+        // Send a list of available groups to the new user
+        handleGroupListMessage(null);
       } else {
         sendMessage(ErrorMessageConstructor.alreadyLoggedInError(), writer);
         socket.close();
@@ -96,19 +98,19 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handleQuitMessage() {
     try {
-      // Remove the client from the server
-      Server.clients.remove(client);
-      Server.receivedPongPerClient.remove(client.getName());
       // Send response QUIT message to the user
       sendMessage(MessageConstructor.quitMessage(), writer);
-      // Send an updated clientList to every user
-      broadCastClientList();
-      // Remove user from groups
+      // Remove client from groups
       Server.groups.forEach(group -> {
         if (group.getGroupMembers().contains(client)) {
           handleLeaveGroupMessage("LGRP " + group.getName());
         }
       });
+      // Remove the client from the server
+      Server.clients.remove(client);
+      Server.receivedPongPerClient.remove(client.getName());
+      // Send an updated clientList to every user
+      broadCastClientList();
       // Close the connection
       socket.close();
     } catch (IOException e) {
@@ -242,7 +244,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
         // Send a message that it was handled correctly
         returnOkMessage(line);
         // Notify all other group members of leave
-        notifyGroupOfLeave(group, true);
+        notifyGroupOfLeave(group, client.getName(), true);
       } else {
         sendMessage(ErrorMessageConstructor.clientNotInGroupError(), writer);
       }
@@ -266,9 +268,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
         if (client != null) {
           // Kick the client
           group.removeGroupMember(client);
-          notifyClientOfKick(group);
+          notifyClientOfKick(client, groupName);
           // Notify all other group members of leave
-          notifyGroupOfLeave(group, false);
+          notifyGroupOfLeave(group, clientName, false);
         } else {
           sendMessage(ErrorMessageConstructor.clientNotInGroupError(), writer);
         }
@@ -334,13 +336,13 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
-  private void notifyGroupOfLeave(Group group, boolean voluntarily) {
+  private void notifyGroupOfLeave(Group group, String clientName, boolean voluntarily) {
     group.getGroupMembers().forEach(groupMember -> {
       try {
         Socket socket = groupMember.getClientSocket();
         String message = voluntarily ?
-            MessageConstructor.leaveGroupMessage(group.getName(), client.getName()) :
-            MessageConstructor.notifyGroupOfKickMessage(group.getName(), client.getName());
+            MessageConstructor.leaveGroupMessage(group.getName(), clientName) :
+            MessageConstructor.notifyGroupOfKickMessage(group.getName(), clientName);
         sendMessage(message, new PrintWriter(socket.getOutputStream()));
       } catch (IOException e) {
         e.printStackTrace();
@@ -348,7 +350,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     });
   }
 
-  private void notifyClientOfKick(Group group) {
-    sendMessage(MessageConstructor.notifyClientOfKickMessage(group.getName()), writer);
+  private void notifyClientOfKick(Client client, String groupName) {
+    try {
+      sendMessage(MessageConstructor.notifyClientOfKickMessage(groupName), new PrintWriter(client.getClientSocket().getOutputStream()));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }
