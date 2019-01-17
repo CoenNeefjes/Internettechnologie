@@ -31,9 +31,10 @@ public class LoginScreen extends JFrame {
   }
 
   private void sendMessage(ActionEvent e) {
-    writer.println("HELO " + textField1.getText());
+    String userName = textField1.getText();
+    writer.println("HELO " + userName);
     writer.flush();
     dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
-    startClientGuiCallBack.startClientGui();
+    startClientGuiCallBack.startClientGui(userName);
   }
 }

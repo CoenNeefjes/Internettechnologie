@@ -44,8 +44,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   protected void handleHelloMessage(String line) {
     clientGui = new ClientGui(writer);
     System.out.println("Starting login screen");
-    LoginScreen loginScreen = new LoginScreen(writer, () -> {
+    LoginScreen loginScreen = new LoginScreen(writer, (userName) -> {
       System.out.println("Starting client Gui");
+      clientGui.setUserName(userName);
       clientGui.setVisible(true);
       clientGui.setRecipient("All", MsgType.BCST);
     });
@@ -60,6 +61,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleBroadCastMessage(String line) {
+    line = line.substring(5); // Remove the prefix
     String sender = line.split(" ")[0];
     String message = line.substring(sender.length()+1);
     clientGui.receiveMessage(MsgType.BCST, sender, message);
@@ -90,8 +92,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleGroupListMessage(String line) {
-    Set<String> groups = new HashSet<>(Arrays.asList(line.split(", ")));
-    ClientApplication.groupNames.retainAll(groups);
+    Set<String> groups = new HashSet<>(Arrays.asList(line.substring(5).split(", ")));
+    ClientApplication.groupNames.addAll(groups);
     clientGui.updateGroupList();
 
 

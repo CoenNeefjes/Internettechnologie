@@ -2,6 +2,6 @@ package client;
 
 public interface LoggedInCallBack {
 
-  void startClientGui();
+  void startClientGui(String userName);
 
 }

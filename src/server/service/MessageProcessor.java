@@ -40,11 +40,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   private void broadcastMessage(String line) throws IOException {
     for (Client client : Server.clients) {
-      if (!client.getName().equals(this.client.getName())) {
-        Socket socket = client.getClientSocket();
-        sendMessage(MessageConstructor.broadcastMessage(this.client.getName(), line),
-            new PrintWriter(socket.getOutputStream()));
-      }
+      Socket socket = client.getClientSocket();
+      sendMessage(MessageConstructor.broadcastMessage(this.client.getName(), line),
+          new PrintWriter(socket.getOutputStream()));
     }
   }
 
@@ -91,8 +89,12 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handleQuitMessage() {
     try {
+      // Remove the client from the server
       Server.clients.remove(client);
       sendMessage(MessageConstructor.quitMessage(), writer);
+      // Send an updated clientList to every user
+      broadCastClientList();
+      // Close the connection
       socket.close();
     } catch (IOException e) {
       e.printStackTrace();
@@ -138,8 +140,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     String groupName = line.substring(5);
     try {
       if (!Server.getGroupNames().contains(groupName)) {
+        // Create the group
         Server.groups.add(new Group(groupName, client));
         returnOkMessage(line);
+        // Send every client an updated group list
+        broadCastGroupList();
       } else {
         sendMessage(ErrorMessageConstructor.groupNameAlreadyExistsError(), writer);
       }
@@ -170,9 +175,10 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handleGroupMessage(String line) {
     String groupName = line.split(" ")[0];
-    String message = line.substring(groupName.length() + 1);
+    String sender = line.split(" ")[1];
+    String message = line.substring(groupName.length() + sender.length() + 2);
 
-    System.out.println("HandleGroupMessage: groupName=" + groupName + ", message=" + message);
+    System.out.println("HandleGroupMessage: groupName=" + groupName + ", sender=" + sender + ", message=" + message);
 
     // Try to get the group
     Group group = Server.getGroupByName(groupName);
@@ -182,18 +188,16 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       // Check if this user is in the group
       if (group.getGroupMemberNames().contains(client.getName())) {
         // Get all clients from group except for this client
-        group.getGroupMembers().stream()
-            .filter(groupMember -> !groupMember.getName().equals(client.getName()))
-            .forEach(groupMember -> {
-              try {
-                // Send the message to all group members
-                Socket socket = client.getClientSocket();
-                sendMessage(MessageConstructor.groupMessage(groupName, client.getName(), message),
-                    new PrintWriter(socket.getOutputStream()));
-              } catch (IOException e) {
-                e.printStackTrace();
-              }
-            });
+        group.getGroupMembers().forEach(groupMember -> {
+          try {
+            // Send the message to all group members
+            Socket socket = client.getClientSocket();
+            sendMessage(MessageConstructor.groupMessage(groupName, client.getName(), message),
+                new PrintWriter(socket.getOutputStream()));
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+        });
       } else {
         sendMessage(ErrorMessageConstructor.userNotInGroupError(), writer);
       }
@@ -212,7 +216,10 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       if (group.getGroupMemberByName(client.getName()) != null) {
         // If the group owner leaves or the group becomes empty, destroy group
         if (group.isOwner(client) || group.getGroupMembers().isEmpty()) {
+          // Destroy the group
           Server.groups.remove(group);
+          // Send every user the updated group list
+          broadCastGroupList();
         }
         group.removeGroupMember(client);
         try {
@@ -280,6 +287,22 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     for (Client client: Server.clients) {
       Socket socket = client.getClientSocket();
       sendMessage(MessageConstructor.clientListMessage(clientListString), new PrintWriter(socket.getOutputStream()));
+    }
+  }
+
+  private void broadCastGroupList() {
+    String groupListString = "";
+    for (Group group : Server.groups) {
+      groupListString += group.getName() + ", ";
+    }
+
+    try {
+      for (Client client: Server.clients) {
+        Socket socket = client.getClientSocket();
+        sendMessage(MessageConstructor.groupListMessage(groupListString), new PrintWriter(socket.getOutputStream()));
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 }
