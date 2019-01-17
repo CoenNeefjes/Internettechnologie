@@ -4,16 +4,17 @@ import client.service.MessageProcessor;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import server.model.Client;
 
 public class ClientApplication {
 
   public static Set<String> clientNames = new HashSet<>();
   public static Set<String> groupNames = new HashSet<>();
+  public static Set<String> subscribedGroups = new HashSet<>();
+  public static Set<String> myGroups = new HashSet<>();
+
+  //TODO: keep track of the messages sent, do something with the local subscribedgroups and mygroups if the messages were successful
 
   public static void main(String[] args) {
     try {

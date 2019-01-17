@@ -27,6 +27,7 @@ public class ClientGui extends JFrame {
   private JPanel chatBoxPanel;
   private JTextArea recipient;
   private JButton addGroupButton;
+  private JButton joinGroupButton;
 
   public ClientGui(PrintWriter writer) {
     this.writer = writer;
@@ -42,6 +43,7 @@ public class ClientGui extends JFrame {
     chatBox.setEditable(false);
     sendButton.addActionListener(this::sendMessage);
     addGroupButton.addActionListener(this::createGroup);
+    joinGroupButton.addActionListener(this::joinGroup);
 
     updateClientList();
   }
@@ -50,11 +52,6 @@ public class ClientGui extends JFrame {
   private MsgType msgType;
   private PrintWriter writer;
   private String userName;
-
-  /* -------------- Getters -------------- */
-  public String getReceipient() {
-    return recipient.getText();
-  }
 
   /* -------------- Setters -------------- */
   public void setUserName(String userName) {
@@ -101,12 +98,12 @@ public class ClientGui extends JFrame {
     String recipient = this.recipient.getText();
     if (recipient.equals("All")) {
       writer.println(MsgType.BCST + " " + textInput.getText());
-    } else if (ClientApplication.clientNames.contains(recipient)) {
+    } else if (ClientApplication.clientNames.contains(recipient) && !recipient.equals(userName)) {
 
       writer.println(MsgType.PMSG + " " + recipient + " " + textInput.getText());
       chatBox.setText(
           chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + msgType + " "
-              + "You" + "to " + recipient + ": " + textInput.getText() + "\n");
+              + "You " + "to " + recipient + ": " + textInput.getText() + "\n");
 
     } else if (ClientApplication.groupNames.contains(recipient)) {
       writer.println(MsgType.GMSG + " " + recipient + " " + userName + " " + textInput.getText());
@@ -119,34 +116,25 @@ public class ClientGui extends JFrame {
   }
 
   private void createGroup(ActionEvent e) {
-    writer.println(MsgType.CGRP + " " + createGroupBox());
+    writer.println(MsgType.CGRP + " " + groupBox());
+    writer.flush();
+  }
+
+  private void joinGroup(ActionEvent e) {
+    writer.println(MsgType.JGRP + " " + groupBox());
     writer.flush();
   }
 
   /* -------------- UI Components -------------- */
-  private void errorBox(String infoMessage, String titleBar) {
+  public void errorBox(String infoMessage, String titleBar) {
     JOptionPane.showMessageDialog(null, infoMessage, "InfoBox: " + titleBar,
         JOptionPane.INFORMATION_MESSAGE);
   }
 
-  private String createGroupBox() {
+  private String groupBox() {
     return JOptionPane.showInputDialog("Enter group name: ");
   }
 
   /* -------------- Logic Methods -------------- */
-  private boolean checkRecipient() {
-    String recipient = this.recipient.getText();
-    if (recipient.equals("All")) {
-      msgType = MsgType.BCST;
-    }
-    if (ClientApplication.clientNames.contains(recipient)) {
-      msgType = MsgType.PMSG;
-    } else if (ClientApplication.groupNames.contains(recipient)) {
-      msgType = MsgType.GMSG;
-    } else {
-      errorBox("Recipient is not in any list", "Error");
-      return false;
-    }
-    return true;
-  }
+
 }

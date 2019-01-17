@@ -136,4 +136,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     // Client should not receive pong message
     System.out.println("Client received PONG message, this should not happen");
   }
+
+  @Override
+  protected void handleErrorMessage(String msg) {
+    clientGui.errorBox(msg, "Error");
+  }
 }

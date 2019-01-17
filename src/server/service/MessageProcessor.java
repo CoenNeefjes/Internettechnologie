@@ -278,6 +278,13 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   }
 
+  @Override
+  protected void handleErrorMessage(String line) {
+    // Server should not receive error message
+    System.out.println("Server received error message, this should not happen");
+    System.out.println("Error message is: " + line);
+  }
+
   private void broadCastClientList() throws IOException {
     String clientListString = "";
     for (Client client : Server.clients) {

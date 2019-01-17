@@ -5,5 +5,6 @@ public enum MsgType {
   BCST,
   PMSG,
   GMSG,
-  CGRP
+  CGRP,
+  JGRP
 }
