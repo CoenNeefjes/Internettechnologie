@@ -1,108 +1,137 @@
 package client.service;
 
+import client.ClientApplication;
+import client.gui.ClientGui;
+import client.gui.LoginScreen;
 import general.MessageHandler;
 
+import general.MsgType;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
+import server.Server;
 
 public class MessageProcessor extends MessageHandler implements Runnable {
 
-    private Scanner scanner;
+  private ClientGui clientGui;
 
-    public MessageProcessor(Socket serverSocket) throws IOException {
-        super(serverSocket);
-        this.scanner = new Scanner(System.in);
+  public MessageProcessor(Socket serverSocket) throws IOException {
+    super(serverSocket);
+  }
+
+  @Override
+  public void run() {
+    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+    while (socket.isConnected()) {
+      receiveMessage(reader);
     }
+  }
 
-    @Override
-    public void run() {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+  private void sendMessage(String msg) {
+    writer.println(msg);
+    writer.flush();
+  }
 
-        while (socket.isConnected()) {
-            receiveMessage(reader);
-        }
-    }
+  @Override
+  protected void handleHelloMessage(String line) {
+    clientGui = new ClientGui(writer);
+    System.out.println("Starting login screen");
+    LoginScreen loginScreen = new LoginScreen(writer, () -> {
+      System.out.println("Starting client Gui");
+      clientGui.setVisible(true);
+      clientGui.setRecipient("All", MsgType.BCST);
+    });
+    loginScreen.setVisible(true);
+  }
 
-    private void sendMessage(String msg) {
-        writer.println(msg);
-        writer.flush();
-    }
-
-    @Override
-    protected void handleHelloMessage(String line) {
-        try {
-            System.out.println("Enter username: ");
-            sendMessage("HELO " + scanner.nextLine());
-            Thread inputSenderThread = new Thread(new InputSender(socket));
-            inputSenderThread.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+  @Override
+  protected void handleQuitMessage() {
     // Client should not receive quit message
-    @Override
-    protected void handleQuitMessage() {
+    System.out.println("Client received QUIT message, this should not happen");
+  }
 
-    }
+  @Override
+  protected void handleBroadCastMessage(String line) {
+    String sender = line.split(" ")[0];
+    String message = line.substring(sender.length()+1);
+    clientGui.receiveMessage(MsgType.BCST, sender, message);
+  }
 
-    @Override
-    protected void handleBroadCastMessage(String line) {
-        System.out.println(line);
-    }
+  @Override
+  protected void handleClientListMessage(String line) {
+    Set<String> clients = new HashSet<>(Arrays.asList(line.substring(5).split(", ")));
+    ClientApplication.clientNames.addAll(clients);
+    clientGui.updateClientList();
 
-    @Override
-    protected void handleClientListMessage(String line) {
-        System.out.println("Online clients: " + line.substring(5));
-    }
 
-    @Override
-    protected void handlePrivateMessage(String line) {
-        String name = line.split(" ")[0];
-        System.out.println("<private message> <from: " + name + "> " + line.substring(name.length()+1));
-    }
+    System.out.println("Online clients: " + line.substring(5));
+  }
 
-    @Override
-    protected void handleCreateGroupMessage(String line) {
+  @Override
+  protected void handlePrivateMessage(String line) {
+    String sender = line.split(" ")[0];
+    String message = line.substring(sender.length() + 1);
+    clientGui.receiveMessage(MsgType.PMSG, sender, message);
+  }
 
-    }
+  @Override
+  protected void handleCreateGroupMessage(String line) {
+    // Client should not receive create group message
+    System.out.println("Client received CGRP message, this should not happen");
+  }
 
-    @Override
-    protected void handleGroupListMessage(String line) {
-        System.out.println("Current groups: " + line.substring(5));
-    }
+  @Override
+  protected void handleGroupListMessage(String line) {
+    Set<String> groups = new HashSet<>(Arrays.asList(line.split(", ")));
+    ClientApplication.groupNames.retainAll(groups);
+    clientGui.updateGroupList();
 
-    @Override
-    protected void handleJoinGroupMessage(String line) {
 
-    }
+    System.out.println("Current groups: " + line.substring(5));
+  }
 
-    @Override
-    protected void handleGroupMessage(String line) {
+  @Override
+  protected void handleJoinGroupMessage(String line) {
+    // Client should not receive join group message
+    System.out.println("Client received JGRP message, this should not happen");
+  }
 
-    }
+  @Override
+  protected void handleGroupMessage(String line) {
+    String groupName = line.split(" ")[0];
+    String sender = line.split(" ")[1];
+    String message = line.substring(groupName.length() + sender.length() + 2);
+    clientGui.receiveMessage(MsgType.PMSG, groupName, sender, message);
+  }
 
-    @Override
-    protected void handleLeaveGroupMessage(String line) {
+  @Override
+  protected void handleLeaveGroupMessage(String line) {
+    // Client should not receive leave group message
+    System.out.println("Client received LGRP message, this should not happen");
+  }
 
-    }
+  @Override
+  protected void handleKickGroupClientMessage(String line) {
+    // Client should not receive kick group client message
+    System.out.println("Client received KGCL message, this should not happen");
+  }
 
-    @Override
-    protected void handleKickGroupClientMessage(String line) {
+  @Override
+  protected void handlePingMessage() {
+    sendMessage("PONG");
+  }
 
-    }
-
-    @Override
-    protected void handlePingMessage() {
-        sendMessage("PONG");
-    }
-
-    // Client should not receive PONG messages
-    @Override
-    protected void handlePongMessage() {
-
-    }
+  @Override
+  protected void handlePongMessage() {
+    // Client should not receive pong message
+    System.out.println("Client received PONG message, this should not happen");
+  }
 }
