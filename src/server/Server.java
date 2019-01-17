@@ -6,7 +6,9 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import server.model.Client;
 import server.model.Group;
@@ -18,6 +20,7 @@ public class Server {
 
   public static List<Client> clients = new ArrayList<>();
   public static List<Group> groups = new ArrayList<>();
+  public static Map<String, Boolean> receivedPongPerClient = new HashMap<>();
 
   public static void main(String[] args) {
     Server myServer = new Server();

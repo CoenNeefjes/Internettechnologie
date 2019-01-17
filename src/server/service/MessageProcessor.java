@@ -24,7 +24,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   public void run() {
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-    while (socket.isConnected()) {
+    while (socket.isConnected() && !socket.isClosed()) {
       receiveMessage(reader);
     }
   }
@@ -69,7 +69,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
         Server.clients.add(client);
         returnOkMessage(line);
         // Start heartbeat Thread
-        Thread heartbeatThread = new Thread(new PingPong(socket));
+        Thread heartbeatThread = new Thread(new PingPong(client));
         heartbeatThread.start();
         // Send an updated clientList to every user
         broadCastClientList();
@@ -281,7 +281,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handlePongMessage() {
-
+    Server.receivedPongPerClient.put(client.getName(), true);
   }
 
   @Override

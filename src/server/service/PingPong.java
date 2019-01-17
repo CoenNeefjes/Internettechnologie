@@ -1,51 +1,52 @@
 package server.service;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import server.Server;
+import server.model.Client;
 
 public class PingPong implements Runnable {
 
-  private InputStream inputStream;
   private OutputStream outputStream;
 
+  private Client client;
   private Socket clientSocket;
 
-  public PingPong(Socket clientSocket) throws IOException {
-    this.inputStream = clientSocket.getInputStream();
+  public PingPong(Client client) throws IOException {
+    this.client = client;
+    this.clientSocket = client.getClientSocket();
     this.outputStream = clientSocket.getOutputStream();
-    this.clientSocket = clientSocket;
   }
 
   @Override
   public void run() {
-    while (clientSocket.isConnected()) {
-      try {
-        // Start read en write
-        PrintWriter writer = new PrintWriter(outputStream);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+    // Start read en write
+    PrintWriter writer = new PrintWriter(outputStream);
 
+    while (clientSocket.isConnected() && !clientSocket.isClosed()) {
+      try {
+        // We haven't received the PONG yet
+        Server.receivedPongPerClient.put(client.getName(), false);
+
+        // Send PING message
         writer.println("PING");
         writer.flush();
 
-        // Wait 3 seconds before checking for PONG message
+        // Wait 3 seconds
         Thread.sleep(3000);
 
-        if (reader.ready()) {
-          String line = reader.readLine();
-          if (!line.startsWith("PONG")) {
-            System.out.println("No PONG message received");
-            //TODO: remove client and username from server
-            clientSocket.close();
-          }
+        // Check if we received the PONG message
+        if (!Server.receivedPongPerClient.get(client.getName())) {
+          System.out.println(client.getName() + " has not sent a PONG in time, terminating connection");
+          Server.clients.remove(client);
+          Server.receivedPongPerClient.remove(client.getName());
+          clientSocket.close();
         }
 
         // Wait a minute before resending the PING message
-        Thread.sleep(60000);
+        Thread.sleep(5000);
       } catch (IOException | InterruptedException e) {
         e.printStackTrace();
       }

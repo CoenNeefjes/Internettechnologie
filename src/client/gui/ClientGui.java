@@ -2,13 +2,9 @@ package client.gui;
 
 import client.ClientApplication;
 import client.service.MessageProcessor;
-import general.MessageHandler;
 import general.MsgType;
 import java.awt.event.ActionEvent;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -16,6 +12,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import javax.swing.WindowConstants;
 
 public class ClientGui extends JFrame {
 
@@ -50,6 +47,8 @@ public class ClientGui extends JFrame {
     joinGroupButton.addActionListener(this::joinGroup);
     leaveGroupButton.addActionListener(this::leaveGroup);
 
+    this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
     updateClientList();
   }
 
@@ -62,7 +61,9 @@ public class ClientGui extends JFrame {
     this.userName = userName;
   }
 
-  public void setRecipient(String text) { recipient.setText(text); }
+  public void setRecipient(String text) {
+    recipient.setText(text);
+  }
 
   public void updateClientList() {
     String result = "All\n";
@@ -88,14 +89,18 @@ public class ClientGui extends JFrame {
   }
 
   public void receiveMessage(MsgType msgType, String groupName, String sender, String message) {
-    if (sender.equals(userName)) {sender = "You";}
+    if (sender.equals(userName)) {
+      sender = "You";
+    }
     chatBox.setText(
         chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + msgType + " "
             + groupName + " " + sender + ": " + message + "\n");
   }
 
   public void receiveMessage(MsgType msgType, String sender, String message) {
-    if (sender.equals(userName)) {sender = "You";}
+    if (sender.equals(userName)) {
+      sender = "You";
+    }
     chatBox.setText(
         chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + msgType + " "
             + sender + ": " + message + "\n");
@@ -109,7 +114,8 @@ public class ClientGui extends JFrame {
     } else if (ClientApplication.clientNames.contains(recipient) && !recipient.equals(userName)) {
       messageProcessor.sendMessage(MsgType.PMSG + " " + recipient + " " + textInput.getText());
       chatBox.setText(
-          chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + MsgType.PMSG + " "
+          chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + MsgType.PMSG
+              + " "
               + "You " + "to " + recipient + ": " + textInput.getText() + "\n");
 
     } else if (ClientApplication.groupNames.contains(recipient)) {
