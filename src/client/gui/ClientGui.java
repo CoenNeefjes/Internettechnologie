@@ -89,6 +89,7 @@ public class ClientGui extends JFrame {
   }
 
   public void receiveMessage(MsgType msgType, String groupName, String sender, String message) {
+    System.out.println("received group message");
     if (sender.equals(userName)) {
       sender = "You";
     }
@@ -98,6 +99,7 @@ public class ClientGui extends JFrame {
   }
 
   public void receiveMessage(MsgType msgType, String sender, String message) {
+    System.out.println("received normal or private message");
     if (sender.equals(userName)) {
       sender = "You";
     }

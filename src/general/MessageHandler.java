@@ -50,7 +50,7 @@ public abstract class MessageHandler {
           handleGroupListMessage(line);
           break;
         case "JGRP":
-          handleJoinGroupMessage(line.substring(5));
+          handleJoinGroupMessage(line);
           break;
         case "GMSG":
           handleGroupMessage(line.substring(5));

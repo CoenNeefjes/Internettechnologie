@@ -42,11 +42,12 @@ public class PingPong implements Runnable {
           System.out.println(client.getName() + " has not sent a PONG in time, terminating connection");
           Server.clients.remove(client);
           Server.receivedPongPerClient.remove(client.getName());
+          //TODO: somehow do this via the messageProcessor
           clientSocket.close();
         }
 
         // Wait a minute before resending the PING message
-        Thread.sleep(5000);
+        Thread.sleep(60000);
       } catch (IOException | InterruptedException e) {
         e.printStackTrace();
       }

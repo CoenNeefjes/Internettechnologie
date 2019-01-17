@@ -79,4 +79,15 @@ public class Server {
     }
     return null;
   }
+
+  public static void removeClient(Client client) {
+    clients.remove(client);
+    groups.forEach(group -> {
+      group.removeGroupMember(client);
+      if (group.getGroupMemberNames().size() == 0) {
+        groups.remove(group);
+      }
+    });
+    receivedPongPerClient.remove(client.getName());
+  }
 }

@@ -48,10 +48,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handleHelloMessage(String line) {
     clientGui = new ClientGui(this);
-    System.out.println("Starting login screen");
     LoginScreen loginScreen = new LoginScreen(writer, (userName) -> {
-      System.out.println("Starting client Gui");
       clientGui.setUserName(userName);
+      clientGui.setTitle(userName);
       clientGui.setVisible(true);
       clientGui.setRecipient("All");
     });
@@ -128,14 +127,24 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleLeaveGroupMessage(String line) {
-    // Client should not receive leave group message
-    System.out.println("Client received LGRP message, this should not happen");
+    String[] parts = line.substring(5).split(" ");
+    clientGui.receiveMessage(MsgType.LGRP, "Server", parts[1] + " left group " + parts[0]);
   }
 
   @Override
   protected void handleKickGroupClientMessage(String line) {
     // Client should not receive kick group client message
-    System.out.println("Client received KGCL message, this should not happen");
+    System.out.println("KGCL message=" + line);
+    String[] parts = line.split(" ");
+    if (parts.length == 1) {
+      // We have been kicked from a group
+      ClientApplication.subscribedGroups.remove(line);
+      clientGui.updateGroupList();
+      clientGui.receiveMessage(MsgType.KGCL, "Server", "You were kicked from group " + parts[0]);
+    } else {
+      // Someone else has been kicked from a group
+      clientGui.receiveMessage(MsgType.KGCL, "Server", parts[1] + " was kicked from group " + parts[0]);
+    }
   }
 
   @Override
@@ -173,6 +182,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
             break;
         }
         sentCommands.remove(command);
+        clientGui.updateGroupList();
       }
     }
   }
