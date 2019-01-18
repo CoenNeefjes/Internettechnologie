@@ -7,9 +7,14 @@ import general.MessageHandler;
 
 import general.MessageMD5Encoder;
 import general.MsgType;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -183,6 +188,31 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
     System.out.println("Unknown +OK message received");
     //TODO: find out where last unknown +OK comes from
+  }
+
+  //TODO: https://www.rgagnon.com/javadetails/java-0542.html
+  public void shareFile(String recipient, String filePath) {
+    filePath = "C:/Users/Coen Neefjes/Documents/HBO-ICT/module 6/upload.txt";
+    try {
+      File myFile = new File (filePath);
+      byte [] mybytearray  = new byte [(int)myFile.length()];
+      FileInputStream fileInputStream = new FileInputStream(myFile);
+      BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+      bufferedInputStream.read(mybytearray,0,mybytearray.length);
+      OutputStream outputStream = socket.getOutputStream();
+      System.out.println("Sending " + filePath + "(" + mybytearray.length + " bytes)");
+      String header = "FILE START";
+      System.out.println("Header byte size: " + header.getBytes().length);
+      outputStream.write(header.getBytes());
+      outputStream.write(mybytearray,0,mybytearray.length);
+      String footer = " END";
+      System.out.println("Footer byte size: " + footer.getBytes().length);
+      outputStream.write(footer.getBytes());
+      outputStream.flush();
+      System.out.println("Done sending");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
 }

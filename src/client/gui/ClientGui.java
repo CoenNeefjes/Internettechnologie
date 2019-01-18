@@ -35,6 +35,7 @@ public class ClientGui extends JFrame {
   private JButton leaveGroupButton;
   private JButton kickGroupMemberButton;
   private JButton quitButton;
+  private JButton shareFileButton;
 
   public ClientGui(MessageProcessor messageProcessor) {
     this.messageProcessor = messageProcessor;
@@ -53,6 +54,7 @@ public class ClientGui extends JFrame {
     leaveGroupButton.addActionListener(this::leaveGroup);
     quitButton.addActionListener(this::quit);
     kickGroupMemberButton.addActionListener(this::kickGroupMember);
+    shareFileButton.addActionListener(this::shareFile);
 
     this.setLocationRelativeTo(null);
     this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -164,9 +166,12 @@ public class ClientGui extends JFrame {
 
   private void kickGroupMember(ActionEvent e) {
     String groupNameClientName = kickGroupMemberBox();
-    if (groupNameClientName != null) {
+    if (groupNameClientName != null && !groupNameClientName.equals("")) {
       messageProcessor.sendMessage(MsgType.KGCL + " " + groupNameClientName);
     }
+  }
+  private void shareFile(ActionEvent e) {
+    messageProcessor.shareFile(null,null);
   }
 
   /* -------------- UI Components -------------- */

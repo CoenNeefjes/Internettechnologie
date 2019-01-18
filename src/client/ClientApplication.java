@@ -9,6 +9,10 @@ import java.util.Set;
 
 public class ClientApplication {
 
+  //TODO: stop the application after quit message, probably still waiting for printer.readLine or printer.ready
+
+  //TODO: encryption: https://docs.oracle.com/javase/1.5.0/docs/guide/security/jsse/samples/index.html
+
   public static Set<String> clientNames = new HashSet<>();
   public static Set<String> groupNames = new HashSet<>();
   public static Set<String> subscribedGroups = new HashSet<>();

@@ -30,4 +30,6 @@ public class ErrorMessageConstructor {
 
   public static String clientAlreadyInGroupError() { return "-ERR you are already in this group"; }
 
+  public static String invalidInputError() { return "-ERR invalid input"; }
+
 }

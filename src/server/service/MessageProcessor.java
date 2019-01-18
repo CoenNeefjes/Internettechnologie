@@ -251,8 +251,13 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleKickGroupClientMessage(String line) {
-    String groupName = line.split(" ")[0];
-    String clientName = line.substring(groupName.length() + 1);
+    String[] parts = line.split(" ");
+    if (parts.length != 2) {
+      sendMessage(ErrorMessageConstructor.invalidInputError(), writer);
+      return;
+    }
+    String groupName = parts[0];
+    String clientName = parts[1];
 
     // Try to get the group
     Group group = Server.getGroupByName(groupName);
