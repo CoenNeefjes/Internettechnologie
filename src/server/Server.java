@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+import javax.crypto.SecretKey;
 import server.model.Client;
 import server.model.Group;
 import server.service.MessageProcessor;
@@ -19,7 +20,7 @@ public class Server {
 
   private final int SERVER_PORT = 1337;
 
-  public static List<Client> clients = new ArrayList<>();
+  public static CopyOnWriteArrayList<Client> clients = new CopyOnWriteArrayList<>();
   public static CopyOnWriteArrayList<Group> groups = new CopyOnWriteArrayList<>();
   public static Map<String, Boolean> receivedPongPerClient = new HashMap<>();
 

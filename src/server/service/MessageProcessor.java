@@ -1,11 +1,15 @@
 package server.service;
 
+import general.MessageBase64Handler;
 import general.MessageHandler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Base64;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import server.Server;
 import server.model.Client;
 import server.model.Group;
@@ -30,8 +34,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
-  private void sendMessage(String msg, PrintWriter writer) {
-    writer.println(msg);
+  private void sendMessage(String message, PrintWriter writer) {
+    System.out.println("Sending message: " + message);
+    writer.println(message);
     writer.flush();
   }
 
@@ -125,6 +130,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handlePrivateMessage(String line) {
+    line = client.getDecryptedMessage(line);
+
     String recipientName = line.split(" ")[0];
 
     // Try to get the client
@@ -133,10 +140,14 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       try {
         // If client exists send message
         Socket socket = client.getClientSocket();
-        sendMessage(
-            MessageConstructor
-                .privateMessage(this.client.getName(),
-                    line.substring(recipientName.length() + 1)),
+//        sendMessage(
+//            MessageConstructor
+//                .privateMessage(this.client.getName(),
+//                    line.substring(recipientName.length() + 1)),
+//            new PrintWriter(socket.getOutputStream()));
+
+        sendMessage(MessageConstructor.encryptedPrivateMessage(client.encrypMessage(
+            this.client.getName() + " " + line.substring(recipientName.length() + 1))),
             new PrintWriter(socket.getOutputStream()));
       } catch (IOException e) {
         e.printStackTrace();
@@ -292,6 +303,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handlePongMessage() {
     Server.receivedPongPerClient.put(client.getName(), true);
+    System.out.println("Received PONG from " + client.getName());
   }
 
   @Override
@@ -305,6 +317,15 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   protected void handleOkMessage(String line) {
     // Server should not receive error message
     System.out.println("Server received ok message, this should not happen");
+  }
+
+  @Override
+  protected void handleCryptoKeyMessage(String encodedKey) {
+    // decode the base64 encoded string
+    byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
+    // rebuild key using SecretKeySpec
+    client.setSecretKey(new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES"));
+    System.out.println("Successfully saved secret key for " + client.getName());
   }
 
   private void broadCastClientList() throws IOException {

@@ -123,7 +123,9 @@ public class ClientGui extends JFrame {
     if (recipient.equals("All")) {
       messageProcessor.sendMessage(MsgType.BCST + " " + textInput.getText());
     } else if (ClientApplication.clientNames.contains(recipient) && !recipient.equals(userName)) {
-      messageProcessor.sendMessage(MsgType.PMSG + " " + recipient + " " + textInput.getText());
+//      messageProcessor.sendMessage(MsgType.PMSG + " " + recipient + " " + textInput.getText());
+      messageProcessor.sendPrivateMessage(recipient + " " + textInput.getText());
+      // Show sent message in the text box
       chatBox.setText(
           chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + MsgType.PMSG
               + " "

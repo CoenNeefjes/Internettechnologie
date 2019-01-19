@@ -10,5 +10,6 @@ public enum MsgType {
   LGRP,
   KGCL,
   QUIT,
-  HELO
+  HELO,
+  CRYP
 }

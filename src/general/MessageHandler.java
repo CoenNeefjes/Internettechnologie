@@ -67,10 +67,15 @@ public abstract class MessageHandler {
         case "PONG":
           handlePongMessage();
           break;
+        case "CRYP":
+          handleCryptoKeyMessage(line.substring(5));
+          break;
         case "-ERR":
           handleErrorMessage(line.substring(5));
+          break;
         case "+OK":
           handleOkMessage(line.substring(4));
+          break;
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -106,5 +111,7 @@ public abstract class MessageHandler {
   protected abstract void handleErrorMessage(String line);
 
   protected abstract void handleOkMessage(String line);
+
+  protected abstract void handleCryptoKeyMessage(String key);
 
 }

@@ -38,6 +38,10 @@ public class MessageConstructor {
     return "PMSG " + sender + " " + msg;
   }
 
+  public static String encryptedPrivateMessage(String encryptedMsg) {
+    return "PMSG " + encryptedMsg;
+  }
+
   public static String groupMessage(String groupName, String sender, String msg) {
     return "GMSG " + groupName + " " + sender + " " + msg;
   }
