@@ -320,11 +320,17 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   }
 
   @Override
-  protected void handleCryptoKeyMessage(String encodedKey) {
-    // decode the base64 encoded string
-    byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
+  protected void handleCryptoKeyMessage(String encodedString) {
+    String[] parts = encodedString.split(" ");
+    // decode the key
+    byte[] decodedKey = Base64.getDecoder().decode(parts[0]);
+    System.out.println("key is: " + new String(decodedKey));
+    // decode the initailisation vector
+    byte[] iv = Base64.getDecoder().decode(parts[1]);
     // rebuild key using SecretKeySpec
     client.setSecretKey(new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES"));
+    client.setInitialisationVector(iv);
+    client.initEncryption();
     System.out.println("Successfully saved secret key for " + client.getName());
   }
 

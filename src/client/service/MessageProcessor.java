@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -31,6 +32,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class MessageProcessor extends MessageHandler implements Runnable {
 
@@ -254,24 +256,43 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       KeyGenerator keyGen = KeyGenerator.getInstance("AES");
       keyGen.init(128);
       SecretKey secretKey = keyGen.generateKey();
+      System.out.println("key is: " + new String(secretKey.getEncoded()));
       // Get instance of ciphers
-      encryptCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-      decryptCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+      encryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
+      decryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
       // Generate random initialisation vector
       SecureRandom randomSecureRandom = SecureRandom.getInstance("SHA1PRNG");
       byte[] ivBytes = new byte[encryptCipher.getBlockSize()];
       randomSecureRandom.nextBytes(ivBytes);
       IvParameterSpec iv = new IvParameterSpec(ivBytes);
       // Initiate the ciphers
-      encryptCipher.init(Cipher.ENCRYPT_MODE, secretKey, iv);
-      decryptCipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
+      encryptCipher.init(Cipher.ENCRYPT_MODE, secretKey);
+      decryptCipher.init(Cipher.DECRYPT_MODE, secretKey);
       // Send this key to the server
       String encodedKey = Base64.getEncoder().encodeToString(secretKey.getEncoded());
       String encodedIv = Base64.getEncoder().encodeToString(iv.getIV());
       sendMessage(MsgType.CRYP + " " + encodedKey + " " + encodedIv);
-    } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | InvalidAlgorithmParameterException e) {
+    } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException e) {
       e.printStackTrace();
     }
+  }
+
+  private static final String key = "aesEncryptionKey";
+  private static final String initVector = "encryptionIntVec";
+
+  public static String encrypt2(String value) {
+    try {
+      IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
+      SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
+      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+      cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
+
+      byte[] encrypted = cipher.doFinal(value.getBytes());
+      return Base64.getEncoder().encodeToString(encrypted);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+    return null;
   }
 
 }
