@@ -132,6 +132,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   protected void handlePrivateMessage(String line) {
     line = client.getDecryptedMessage(line);
 
+    System.out.println("decrypted line: " + line);
+
     String recipientName = line.split(" ")[0];
 
     // Try to get the client
@@ -146,7 +148,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 //                    line.substring(recipientName.length() + 1)),
 //            new PrintWriter(socket.getOutputStream()));
 
-        sendMessage(MessageConstructor.encryptedPrivateMessage(client.encrypMessage(
+        sendMessage(MessageConstructor.encryptedPrivateMessage(client.encryptMessage(
             this.client.getName() + " " + line.substring(recipientName.length() + 1))),
             new PrintWriter(socket.getOutputStream()));
       } catch (IOException e) {
@@ -319,17 +321,26 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     System.out.println("Server received ok message, this should not happen");
   }
 
+//  @Override
+//  protected void handleCryptoKeyMessage(String encodedString) {
+//    String[] parts = encodedString.split(" ");
+//    // decode the key
+//    byte[] decodedKey = Base64.getDecoder().decode(parts[0]);
+//    System.out.println("key is: " + new String(decodedKey));
+//    // decode the initailisation vector
+//    byte[] iv = Base64.getDecoder().decode(parts[1]);
+//    // rebuild key using SecretKeySpec
+//    client.setSecretKey(new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES"));
+//    client.setInitialisationVector(iv);
+//    client.initEncryption();
+//    System.out.println("Successfully saved secret key for " + client.getName());
+//  }
+
   @Override
   protected void handleCryptoKeyMessage(String encodedString) {
     String[] parts = encodedString.split(" ");
-    // decode the key
-    byte[] decodedKey = Base64.getDecoder().decode(parts[0]);
-    System.out.println("key is: " + new String(decodedKey));
-    // decode the initailisation vector
-    byte[] iv = Base64.getDecoder().decode(parts[1]);
-    // rebuild key using SecretKeySpec
-    client.setSecretKey(new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES"));
-    client.setInitialisationVector(iv);
+    client.setKey(parts[0]);
+    client.setIv(parts[1]);
     client.initEncryption();
     System.out.println("Successfully saved secret key for " + client.getName());
   }
