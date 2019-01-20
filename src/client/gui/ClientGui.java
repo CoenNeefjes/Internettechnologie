@@ -126,10 +126,10 @@ public class ClientGui extends JFrame {
 //      messageProcessor.sendMessage(MsgType.PMSG + " " + recipient + " " + textInput.getText());
       messageProcessor.sendPrivateMessage(recipient + " " + textInput.getText());
       // Show sent message in the text box
-      chatBox.setText(
-          chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + MsgType.PMSG
-              + " "
-              + "You " + "to " + recipient + ": " + textInput.getText() + "\n");
+//      chatBox.setText(
+//          chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + MsgType.PMSG
+//              + " "
+//              + "You " + "to " + recipient + ": " + textInput.getText() + "\n");
 
     } else if (ClientApplication.groupNames.contains(recipient)) {
       messageProcessor.sendMessage(MsgType.GMSG + " " + recipient + " " + textInput.getText());

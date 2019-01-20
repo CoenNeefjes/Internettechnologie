@@ -9,6 +9,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.WindowConstants;
 
 public class LoginScreen extends JFrame {
 
@@ -28,10 +29,8 @@ public class LoginScreen extends JFrame {
     this.setLocationRelativeTo(null);
 
     loginButton.addActionListener(this::sendMessage);
-  }
 
-  public void close() {
-    dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+    this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
   }
 
   public void errorBox(String infoMessage) {

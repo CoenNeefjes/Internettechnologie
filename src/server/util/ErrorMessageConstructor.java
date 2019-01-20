@@ -3,33 +3,39 @@ package server.util;
 public class ErrorMessageConstructor {
 
   public static String clientNotFoundError() {
-    return "-ERR client not found";
+    return "-ERR Client not found";
   }
 
   public static String alreadyLoggedInError() {
-    return "-ERR user already logged in";
+    return "-ERR User already logged in";
   }
 
   public static String groupNameAlreadyExistsError() {
-    return "-ERR group name already exists";
+    return "-ERR Group name already exists";
   }
 
   public static String groupNotFoundError() {
-    return "-ERR group not found";
+    return "-ERR Group not found";
   }
 
   public static String clientNotInGroupError() {
-    return "-ERR user is not in this group";
+    return "-ERR User is not in this group";
   }
 
   public static String invalidNameError(String name) { return "-ERR " + name + " is not a valid name"; }
 
   public static String notOwnerOfGroupError() {
-    return "-ERR you are not the owner of the group";
+    return "-ERR You are not the owner of the group";
   }
 
-  public static String clientAlreadyInGroupError() { return "-ERR you are already in this group"; }
+  public static String clientAlreadyInGroupError() { return "-ERR You are already in this group"; }
 
-  public static String invalidInputError() { return "-ERR invalid input"; }
+  public static String invalidInputError() { return "-ERR Invalid input"; }
+
+  public static String sendToSelfError() { return "-ERR You cannot send to yourself"; }
+
+  public static String kickSelfError() { return "-ERR You cannot kick yourself"; }
+
+  public static String emptyMessageError() { return "-ERR Empty messages are not allowed"; }
 
 }

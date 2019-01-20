@@ -91,7 +91,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handlePrivateMessage(String line) {
-    line = decrypt(line);
+    line = decrypt(line.substring(5));
     System.out.println("decrypted private message: " + line);
     String sender = line.split(" ")[0];
     String message = line.substring(sender.length() + 1);
@@ -183,26 +183,37 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   protected void handleOkMessage(String line) {
     for (String command : sentCommands) {
       if (MessageMD5Encoder.encode(command).equals(line)) {
-        switch (command.split(" ")[0]) {
-          //TODO: do this for all messages
+        String[] parts = command.split(" ");
+        switch (parts[0]) {
           case "JGRP":
             ClientApplication.subscribedGroups.add(command.substring(5));
+            clientGui.updateGroupList();
             break;
           case "CGRP":
             ClientApplication.subscribedGroups.add(command.substring(5));
             ClientApplication.myGroups.add(command.substring(5));
+            clientGui.updateGroupList();
             break;
           case "LGRP":
             ClientApplication.subscribedGroups.remove(command.substring(5));
             ClientApplication.myGroups.remove(command.substring(5));
+            clientGui.updateGroupList();
             break;
           case "HELO":
-            loginScreen.close();
+            loginScreen.setVisible(false);
             initClientGui(command.substring(5));
             initEncryption();
+            break;
+          case "FILE":
+            clientGui.receiveMessage(MsgType.FILE, "Server", "Successfully sent the file");
+            break;
+          case "PMSG":
+            String decrypted = decrypt(parts[1]);
+            String name = decrypted.split(" ")[0];
+            clientGui.receiveMessage(MsgType.PMSG, "You to " + name, decrypted.substring(name.length() + 1));
+            break;
         }
         sentCommands.remove(command);
-        clientGui.updateGroupList();
         return;
       }
     }

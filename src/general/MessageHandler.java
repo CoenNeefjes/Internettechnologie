@@ -41,7 +41,7 @@ public abstract class MessageHandler {
           handleClientListMessage(line);
           break;
         case "PMSG":
-          handlePrivateMessage(line.substring(5));
+          handlePrivateMessage(line);
           break;
         case "CGRP":
           handleCreateGroupMessage(line);

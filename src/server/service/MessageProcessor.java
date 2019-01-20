@@ -57,7 +57,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       }
 
       String userName = line.substring(5);
-      if (!StringValidator.validateString(userName)) {
+      if (!StringValidator.validateNameString(userName)) {
         sendMessage(ErrorMessageConstructor.invalidNameError(userName), writer);
         return;
       }
@@ -84,8 +84,12 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handleBroadCastMessage(String line) {
     try {
-      returnOkMessage(line);
-      broadcastMessage(line.substring(5));
+      if (StringValidator.validateMessageString(line.substring(5))) {
+        returnOkMessage(line);
+        broadcastMessage(line.substring(5));
+      } else {
+        sendMessage(ErrorMessageConstructor.emptyMessageError(), writer);
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -120,31 +124,45 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handlePrivateMessage(String line) {
-    line = client.getDecryptedMessage(line);
+    String decryptedLine = client.getDecryptedMessage(line.substring(5));
 
-    String recipientName = line.split(" ")[0];
+    String recipientName = decryptedLine.split(" ")[0];
+    String message = decryptedLine.substring(recipientName.length() + 1);
 
-    // Try to get the client
-    Client client = Server.getClientByName(recipientName);
-    if (client != null) {
-      try {
-        // If client exists send message
-        Socket socket = client.getClientSocket();
-        sendMessage(MessageConstructor.encryptedPrivateMessage(client.encryptMessage(
-            this.client.getName() + " " + line.substring(recipientName.length() + 1))),
-            new PrintWriter(socket.getOutputStream()));
-      } catch (IOException e) {
-        e.printStackTrace();
+    // Check if not sending to self
+    if (!recipientName.equals(this.client.getName())) {
+      // Check if the message is not empty
+      if (StringValidator.validateMessageString(message)) {
+        // Try to get the client
+        Client client = Server.getClientByName(recipientName);
+        if (client != null) {
+          try {
+            // If client exists send message
+            Socket socket = client.getClientSocket();
+            sendMessage(MessageConstructor.encryptedPrivateMessage(client.encryptMessage(
+                this.client.getName() + " " + message)),
+                new PrintWriter(socket.getOutputStream()));
+            returnOkMessage(line);
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+        } else {
+          sendMessage(ErrorMessageConstructor.clientNotFoundError(), writer);
+        }
+      } else {
+        System.out.println("Empty message: " + message);
+        sendMessage(ErrorMessageConstructor.emptyMessageError(), writer);
       }
     } else {
-      sendMessage(ErrorMessageConstructor.clientNotFoundError(), writer);
+      sendMessage(ErrorMessageConstructor.sendToSelfError(), writer);
     }
+
   }
 
   @Override
   protected void handleCreateGroupMessage(String line) {
     String groupName = line.substring(5);
-    if (!StringValidator.validateString(groupName)) {
+    if (!StringValidator.validateNameString(groupName)) {
       sendMessage(ErrorMessageConstructor.invalidNameError(groupName), writer);
       return;
     }
@@ -197,17 +215,22 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     if (group != null) {
       // Check if this user is in the group
       if (group.getGroupMemberNames().contains(client.getName())) {
-        // Get all clients from group
-        group.getGroupMembers().forEach(groupMember -> {
-          try {
-            // Send the message to all group members
-            Socket socket = groupMember.getClientSocket();
-            sendMessage(MessageConstructor.groupMessage(groupName, client.getName(), message),
-                new PrintWriter(socket.getOutputStream()));
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-        });
+        // Check if the message is not empty
+        if (StringValidator.validateMessageString(message)) {
+          // Get all clients from group
+          group.getGroupMembers().forEach(groupMember -> {
+            try {
+              // Send the message to all group members
+              Socket socket = groupMember.getClientSocket();
+              sendMessage(MessageConstructor.groupMessage(groupName, client.getName(), message),
+                  new PrintWriter(socket.getOutputStream()));
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
+          });
+        } else {
+          sendMessage(ErrorMessageConstructor.emptyMessageError(), writer);
+        }
       } else {
         sendMessage(ErrorMessageConstructor.clientNotInGroupError(), writer);
       }
@@ -258,17 +281,22 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     Group group = Server.getGroupByName(groupName);
     if (group != null) {
       // Check if this user is group owner
-      if (group.isOwner(client)) {
-        // Check if the user that needs to be kicked is in the group
-        Client client = group.getGroupMemberByName(clientName);
-        if (client != null) {
-          // Kick the client
-          group.removeGroupMember(client);
-          notifyClientOfKick(client, groupName);
-          // Notify all other group members of leave
-          notifyGroupOfLeave(group, clientName, false);
+      if (group.isOwner(this.client)) {
+        // Check if the user is not kicking himself
+        if (!clientName.equals(this.client.getName())) {
+          // Check if the user that needs to be kicked is in the group
+          Client client = group.getGroupMemberByName(clientName);
+          if (client != null) {
+            // Kick the client
+            group.removeGroupMember(client);
+            notifyClientOfKick(client, groupName);
+            // Notify all other group members of leave
+            notifyGroupOfLeave(group, clientName, false);
+          } else {
+            sendMessage(ErrorMessageConstructor.clientNotInGroupError(), writer);
+          }
         } else {
-          sendMessage(ErrorMessageConstructor.clientNotInGroupError(), writer);
+          sendMessage(ErrorMessageConstructor.kickSelfError(), writer);
         }
       } else {
         sendMessage(ErrorMessageConstructor.notOwnerOfGroupError(), writer);
@@ -317,16 +345,21 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     String[] parts = line.substring(5).split(" ");
     String recipientName = parts[0];
     Client recipient = Server.getClientByName(recipientName);
-    if (recipient != null) {
-      try {
-        Socket socket = recipient.getClientSocket();
-        sendMessage(MessageConstructor.fileMessage(client.getName(), parts[1], parts[2]),
-            new PrintWriter(socket.getOutputStream()));
-      } catch (IOException e) {
-        e.printStackTrace();
+    if (!recipientName.equals(client.getName())) {
+      if (recipient != null) {
+        try {
+          Socket socket = recipient.getClientSocket();
+          sendMessage(MessageConstructor.fileMessage(client.getName(), parts[1], parts[2]),
+              new PrintWriter(socket.getOutputStream()));
+          returnOkMessage(line);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      } else {
+        sendMessage(ErrorMessageConstructor.clientNotFoundError(), writer);
       }
     } else {
-      sendMessage(ErrorMessageConstructor.clientNotFoundError(), writer);
+      sendMessage(ErrorMessageConstructor.sendToSelfError(), writer);
     }
   }
 
