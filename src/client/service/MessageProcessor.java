@@ -8,30 +8,24 @@ import general.MessageBase64Handler;
 import general.MessageHandler;
 import general.MessageMD5Encoder;
 import general.MsgType;
+import general.RandomString;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashSet;
 import java.util.concurrent.CopyOnWriteArrayList;
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -40,6 +34,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   private ClientGui clientGui;
 
   private CopyOnWriteArrayList<String> sentCommands = new CopyOnWriteArrayList<>();
+
+  private Cipher encryptCipher;
+  private Cipher decryptCipher;
 
   public MessageProcessor(Socket serverSocket) throws IOException {
     super(serverSocket);
@@ -217,28 +214,54 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     System.out.println("Client received CRYP message, this should not happen");
   }
 
-  //TODO: https://www.rgagnon.com/javadetails/java-0542.html
-  public void shareFile(String recipient, String filePath) {
-    filePath = "C:/Users/Coen Neefjes/Documents/HBO-ICT/module 6/upload.txt";
-    try {
-      File myFile = new File(filePath);
-      byte[] mybytearray = new byte[(int) myFile.length()];
-      FileInputStream fileInputStream = new FileInputStream(myFile);
-      BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
-      bufferedInputStream.read(mybytearray, 0, mybytearray.length);
-      OutputStream outputStream = socket.getOutputStream();
-      System.out.println("Sending " + filePath + "(" + mybytearray.length + " bytes)");
-      String header = "FILE START";
-      System.out.println("Header byte size: " + header.getBytes().length);
-      outputStream.write(header.getBytes());
-      outputStream.write(mybytearray, 0, mybytearray.length);
-      String footer = " END";
-      System.out.println("Footer byte size: " + footer.getBytes().length);
-      outputStream.write(footer.getBytes());
-      outputStream.flush();
-      System.out.println("Done sending");
+  @Override
+  protected void handleFileMessage(String line) {
+    String[] parts = line.substring(5).split(" ");
+    String filePath =
+        "C:/Users/Coen Neefjes/IdeaProjects/Internettechnologie/src/files/received_" + parts[1];
+    String fileString = MessageBase64Handler.decode(parts[2]);
+
+    try (FileOutputStream stream = new FileOutputStream(filePath)) {
+      stream.write(fileString.getBytes());
     } catch (IOException e) {
       e.printStackTrace();
+    }
+
+    clientGui.receiveMessage(MsgType.FILE, "Server",
+        "You received a file from " + parts[0] + ". It is saved at: " + filePath);
+  }
+
+  //TODO: https://www.rgagnon.com/javadetails/java-0542.html
+  public void shareFile(String recipient, String filePath) {
+    filePath = "C:/Users/Coen Neefjes/IdeaProjects/Internettechnologie/src/files/upload.txt";
+    String[] parts = filePath.split("/");
+    String fileName = parts[parts.length - 1];
+
+    FileInputStream fileInputStream = null;
+    BufferedInputStream bufferedInputStream = null;
+    try {
+      File myFile = new File(filePath);
+      byte[] fileBytes = new byte[(int) myFile.length()];
+      fileInputStream = new FileInputStream(myFile);
+      bufferedInputStream = new BufferedInputStream(fileInputStream);
+      bufferedInputStream.read(fileBytes, 0, fileBytes.length);
+      sendMessage("FILE " + recipient + " " + fileName + " " + MessageBase64Handler
+          .encode(new String(fileBytes)));
+      System.out.println("Sending " + filePath + "(" + fileBytes.length + " bytes)");
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        if (fileInputStream != null) {
+          fileInputStream.close();
+        }
+        if (bufferedInputStream != null) {
+          bufferedInputStream.close();
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
     }
   }
 
@@ -250,46 +273,20 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     return CryptographyHandler.encrypt(encryptCipher, plainText);
   }
 
-//  private void initEncryption() {
-//    try {
-//      // Generate random key
-//      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-//      keyGen.init(128);
-//      SecretKey secretKey = keyGen.generateKey();
-//      System.out.println("key is: " + new String(secretKey.getEncoded()));
-//      // Get instance of ciphers
-//      encryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
-//      decryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
-//      // Generate random initialisation vector
-//      SecureRandom randomSecureRandom = SecureRandom.getInstance("SHA1PRNG");
-//      byte[] ivBytes = new byte[encryptCipher.getBlockSize()];
-//      randomSecureRandom.nextBytes(ivBytes);
-//      IvParameterSpec iv = new IvParameterSpec(ivBytes);
-//      // Initiate the ciphers
-//      encryptCipher.init(Cipher.ENCRYPT_MODE, secretKey);
-//      decryptCipher.init(Cipher.DECRYPT_MODE, secretKey);
-//      // Send this key to the server
-//      String encodedKey = Base64.getEncoder().encodeToString(secretKey.getEncoded());
-//      String encodedIv = Base64.getEncoder().encodeToString(iv.getIV());
-//      sendMessage(MsgType.CRYP + " " + encodedKey + " " + encodedIv);
-//    } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException e) {
-//      e.printStackTrace();
-//    }
-//  }
-
-  private static final String key = "aesEncryptionKey";
-  private static final String initVector = "encryptionIntVec";
-  private Cipher encryptCipher;
-  private Cipher decryptCipher;
-
   private void initEncryption() {
     try {
+      // Generate key and initialisation vector
+      RandomString randomStringGenerator = new RandomString();
+      String key = randomStringGenerator.nextString();
+      String initVector = randomStringGenerator.nextString();
+      // Create the ciphers
       IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
       SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
       encryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
       encryptCipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
       decryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
       decryptCipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
+      // Send the key and iv to the server
       sendMessage(MsgType.CRYP + " " + key + " " + initVector);
     } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException | InvalidAlgorithmParameterException e) {
       e.printStackTrace();

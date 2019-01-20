@@ -58,4 +58,8 @@ public class MessageConstructor {
     return "KGCL " + groupName;
   }
 
+  public static String fileMessage(String sender, String fileName, String fileString) {
+    return "FILE " + sender + " " + fileName + " " + fileString;
+  }
+
 }

@@ -173,7 +173,8 @@ public class ClientGui extends JFrame {
     }
   }
   private void shareFile(ActionEvent e) {
-    messageProcessor.shareFile(null,null);
+    String filePath = fileShareBox();
+    messageProcessor.shareFile(this.recipient.getText(),null);
   }
 
   /* -------------- UI Components -------------- */
@@ -184,6 +185,10 @@ public class ClientGui extends JFrame {
 
   private String groupBox() {
     return JOptionPane.showInputDialog("Enter group name: ");
+  }
+
+  private String fileShareBox() {
+    return JOptionPane.showInputDialog("Enter file path: ");
   }
 
   private String kickGroupMemberBox() {

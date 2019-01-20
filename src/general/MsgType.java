@@ -11,5 +11,6 @@ public enum MsgType {
   KGCL,
   QUIT,
   HELO,
-  CRYP
+  CRYP,
+  FILE
 }

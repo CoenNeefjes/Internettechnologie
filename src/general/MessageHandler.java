@@ -68,7 +68,10 @@ public abstract class MessageHandler {
           handlePongMessage();
           break;
         case "CRYP":
-          handleCryptoKeyMessage(line.substring(5));
+          handleCryptoKeyMessage(line);
+          break;
+        case "FILE":
+          handleFileMessage(line);
           break;
         case "-ERR":
           handleErrorMessage(line.substring(5));
@@ -112,6 +115,8 @@ public abstract class MessageHandler {
 
   protected abstract void handleOkMessage(String line);
 
-  protected abstract void handleCryptoKeyMessage(String key);
+  protected abstract void handleCryptoKeyMessage(String line);
+
+  protected abstract void handleFileMessage(String line);
 
 }
