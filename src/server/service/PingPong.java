@@ -29,7 +29,7 @@ public class PingPong implements Runnable {
       try {
         System.out.println("sending ping");
         // We haven't received the PONG yet
-        Server.receivedPongPerClient.put(client.getName(), false);
+        client.setReceivedPong(false);
 
         // Send PING message
         writer.println("PING");
@@ -39,17 +39,14 @@ public class PingPong implements Runnable {
         Thread.sleep(3000);
 
         // Check if we received the PONG message
-        if (Server.receivedPongPerClient.get(client.getName()) != null
-            && !Server.receivedPongPerClient.get(client.getName())) {
+        if (!client.getReceivedPong()) {
           System.out.println(client.getName() + " sent no PONG, terminating connection");
-          Server.clients.remove(client);
-          Server.receivedPongPerClient.remove(client.getName());
-          //TODO: somehow do this via the messageProcessor
+          Server.removeClient(client);
           clientSocket.close();
         }
 
         // Wait a minute before resending the PING message
-        Thread.sleep(60000);
+        Thread.sleep(Server.PING_INTERVAL * 1000);
       } catch (IOException | InterruptedException e) {
         e.printStackTrace();
       }

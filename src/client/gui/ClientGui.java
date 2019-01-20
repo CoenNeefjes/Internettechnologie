@@ -174,7 +174,9 @@ public class ClientGui extends JFrame {
   }
   private void shareFile(ActionEvent e) {
     String filePath = fileShareBox();
-    messageProcessor.shareFile(this.recipient.getText(),null);
+    if (filePath != null) {
+      messageProcessor.shareFile(this.recipient.getText(),filePath);
+    }
   }
 
   /* -------------- UI Components -------------- */

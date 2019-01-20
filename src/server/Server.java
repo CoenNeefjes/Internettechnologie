@@ -18,11 +18,11 @@ import server.service.MessageProcessor;
 
 public class Server {
 
-  private final int SERVER_PORT = 1337;
+  public static final int SERVER_PORT = 1337;
+  public static final int PING_INTERVAL = 60;
 
   public static CopyOnWriteArrayList<Client> clients = new CopyOnWriteArrayList<>();
   public static CopyOnWriteArrayList<Group> groups = new CopyOnWriteArrayList<>();
-  public static Map<String, Boolean> receivedPongPerClient = new HashMap<>();
 
   public static void main(String[] args) {
     Server myServer = new Server();
@@ -90,6 +90,5 @@ public class Server {
         groups.remove(group);
       }
     });
-    receivedPongPerClient.remove(client.getName());
   }
 }

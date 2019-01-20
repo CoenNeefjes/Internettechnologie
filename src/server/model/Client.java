@@ -13,18 +13,23 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
 
+  // Client variables
   private Socket clientSocket;
   private String name;
 
+  // PING PONG
+  private boolean receivedPong;
+
+  // Encryption variables
   private Cipher encryptCipher;
   private Cipher decryptCipher;
-
   private String key;
   private String iv;
 
   public Client(Socket clientSocket, String name) {
     this.clientSocket = clientSocket;
     this.name = name;
+    this.receivedPong = false;
   }
 
   public Socket getClientSocket() {
@@ -41,6 +46,14 @@ public class Client {
 
   public void setIv(String iv) {
     this.iv = iv;
+  }
+
+  public void setReceivedPong(boolean state) {
+    this.receivedPong = state;
+  }
+
+  public boolean getReceivedPong() {
+    return receivedPong;
   }
 
   public String getDecryptedMessage(String encryptedMessage) {

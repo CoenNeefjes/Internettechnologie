@@ -1,15 +1,11 @@
 package server.service;
 
-import general.MessageBase64Handler;
 import general.MessageHandler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Base64;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import server.Server;
 import server.model.Client;
 import server.model.Group;
@@ -57,16 +53,12 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     try {
       if (client != null) {
         sendMessage(ErrorMessageConstructor.alreadyLoggedInError(), writer);
-        //TODO: not close the connection
-        socket.close();
         return;
       }
 
       String userName = line.substring(5);
       if (!StringValidator.validateString(userName)) {
         sendMessage(ErrorMessageConstructor.invalidNameError(userName), writer);
-        //TODO: not close the connection
-        socket.close();
         return;
       }
 
@@ -83,7 +75,6 @@ public class MessageProcessor extends MessageHandler implements Runnable {
         handleGroupListMessage(null);
       } else {
         sendMessage(ErrorMessageConstructor.alreadyLoggedInError(), writer);
-        socket.close();
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -112,7 +103,6 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     });
     // Remove the client from the server
     Server.clients.remove(client);
-    Server.receivedPongPerClient.remove(client.getName());
     // Send an updated clientList to every user
     broadCastClientList();
     // Close the connection
@@ -296,7 +286,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handlePongMessage() {
-    Server.receivedPongPerClient.put(client.getName(), true);
+    Server.getClientByName(client.getName()).setReceivedPong(true);
     System.out.println("Received PONG from " + client.getName());
   }
 
@@ -330,7 +320,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     if (recipient != null) {
       try {
         Socket socket = recipient.getClientSocket();
-        sendMessage(MessageConstructor.fileMessage(client.getName(), parts[1], parts[2]), new PrintWriter(socket.getOutputStream()));
+        sendMessage(MessageConstructor.fileMessage(client.getName(), parts[1], parts[2]),
+            new PrintWriter(socket.getOutputStream()));
       } catch (IOException e) {
         e.printStackTrace();
       }

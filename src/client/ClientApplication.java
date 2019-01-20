@@ -6,12 +6,9 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
+import server.Server;
 
 public class ClientApplication {
-
-  //TODO: stop the application after quit message, probably still waiting for printer.readLine or printer.ready
-
-  //TODO: encryption: https://docs.oracle.com/javase/1.5.0/docs/guide/security/jsse/samples/index.html
 
   public static Set<String> clientNames = new HashSet<>();
   public static Set<String> groupNames = new HashSet<>();
@@ -20,7 +17,7 @@ public class ClientApplication {
 
   public static void main(String[] args) {
     try {
-      Socket socket = new Socket(InetAddress.getLocalHost(), 1337);
+      Socket socket = new Socket(InetAddress.getLocalHost(), Server.SERVER_PORT);
       System.out.println("Connected to server");
 
       Thread messageThread = new Thread(new MessageProcessor(socket));

@@ -32,6 +32,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class MessageProcessor extends MessageHandler implements Runnable {
 
   private ClientGui clientGui;
+  private LoginScreen loginScreen;
 
   private CopyOnWriteArrayList<String> sentCommands = new CopyOnWriteArrayList<>();
 
@@ -64,22 +65,14 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleHelloMessage(String line) {
-    clientGui = new ClientGui(this);
-    LoginScreen loginScreen = new LoginScreen(this, (userName) -> {
-      // Execute this code when the username is sent
-      clientGui.setUserName(userName);
-      clientGui.setTitle(userName);
-      clientGui.setVisible(true);
-      clientGui.setRecipient("All");
-      initEncryption();
-    });
+    loginScreen = new LoginScreen(this);
     loginScreen.setVisible(true);
-    // Set up the encryption for private messages and send the secret key to the server
   }
 
   @Override
   protected void handleQuitMessage() throws IOException {
     socket.close();
+    System.exit(0);
   }
 
   @Override
@@ -139,7 +132,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     String groupName = line.split(" ")[0];
     String sender = line.split(" ")[1];
     String message = line.substring(groupName.length() + sender.length() + 2);
-    clientGui.receiveMessage(MsgType.PMSG, groupName, sender, message);
+    clientGui.receiveMessage(MsgType.GMSG, groupName, sender, message);
   }
 
   @Override
@@ -179,7 +172,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleErrorMessage(String msg) {
-    clientGui.errorBox(msg);
+    if (clientGui != null) {
+      clientGui.errorBox(msg);
+    } else {
+      loginScreen.errorBox(msg);
+    }
   }
 
   @Override
@@ -187,6 +184,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     for (String command : sentCommands) {
       if (MessageMD5Encoder.encode(command).equals(line)) {
         switch (command.split(" ")[0]) {
+          //TODO: do this for all messages
           case "JGRP":
             ClientApplication.subscribedGroups.add(command.substring(5));
             break;
@@ -198,6 +196,10 @@ public class MessageProcessor extends MessageHandler implements Runnable {
             ClientApplication.subscribedGroups.remove(command.substring(5));
             ClientApplication.myGroups.remove(command.substring(5));
             break;
+          case "HELO":
+            loginScreen.close();
+            initClientGui(command.substring(5));
+            initEncryption();
         }
         sentCommands.remove(command);
         clientGui.updateGroupList();
@@ -205,7 +207,6 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       }
     }
     System.out.println("Unknown +OK message received");
-    //TODO: find out where last unknown +OK comes from
   }
 
   @Override
@@ -231,9 +232,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
         "You received a file from " + parts[0] + ". It is saved at: " + filePath);
   }
 
-  //TODO: https://www.rgagnon.com/javadetails/java-0542.html
   public void shareFile(String recipient, String filePath) {
-    filePath = "C:/Users/Coen Neefjes/IdeaProjects/Internettechnologie/src/files/upload.txt";
+//    filePath = "C:/Users/Coen Neefjes/IdeaProjects/Internettechnologie/src/files/upload.txt";
     String[] parts = filePath.split("/");
     String fileName = parts[parts.length - 1];
 
@@ -250,6 +250,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       System.out.println("Sending " + filePath + "(" + fileBytes.length + " bytes)");
     } catch (IOException e) {
       e.printStackTrace();
+      clientGui.errorBox("Could not find or send specified file");
     } finally {
       try {
         if (fileInputStream != null) {
@@ -291,6 +292,14 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException | InvalidAlgorithmParameterException e) {
       e.printStackTrace();
     }
+  }
+
+  private void initClientGui(String userName) {
+    clientGui = new ClientGui(this);
+    clientGui.setUserName(userName);
+    clientGui.setTitle(userName);
+    clientGui.setVisible(true);
+    clientGui.setRecipient("All");
   }
 
 }

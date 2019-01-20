@@ -17,7 +17,7 @@ public class MessageConstructor {
   }
 
   public static String quitMessage() {
-    return "+OK Goodbye";
+    return "QUIT";
   }
 
   public static String clientListMessage(String clientListString) {
