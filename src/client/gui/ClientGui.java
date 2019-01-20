@@ -58,9 +58,6 @@ public class ClientGui extends JFrame {
 
     this.setLocationRelativeTo(null);
     this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
-    updateClientList();
-//    updateGroupList();
   }
 
   /* -------------- Variables -------------- */
@@ -123,14 +120,7 @@ public class ClientGui extends JFrame {
     if (recipient.equals("All")) {
       messageProcessor.sendMessage(MsgType.BCST + " " + textInput.getText());
     } else if (ClientApplication.clientNames.contains(recipient) && !recipient.equals(userName)) {
-//      messageProcessor.sendMessage(MsgType.PMSG + " " + recipient + " " + textInput.getText());
       messageProcessor.sendPrivateMessage(recipient + " " + textInput.getText());
-      // Show sent message in the text box
-//      chatBox.setText(
-//          chatBox.getText() + new SimpleDateFormat("HH:mm").format(new Date()) + " " + MsgType.PMSG
-//              + " "
-//              + "You " + "to " + recipient + ": " + textInput.getText() + "\n");
-
     } else if (ClientApplication.groupNames.contains(recipient)) {
       messageProcessor.sendMessage(MsgType.GMSG + " " + recipient + " " + textInput.getText());
     } else {

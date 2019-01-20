@@ -210,7 +210,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
           case "PMSG":
             String decrypted = decrypt(parts[1]);
             String name = decrypted.split(" ")[0];
-            clientGui.receiveMessage(MsgType.PMSG, "You to " + name, decrypted.substring(name.length() + 1));
+            clientGui.receiveMessage(MsgType.PMSG, "You to " + name,
+                decrypted.substring(name.length() + 1));
             break;
         }
         sentCommands.remove(command);
@@ -229,8 +230,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handleFileMessage(String line) {
     String[] parts = line.substring(5).split(" ");
-    String filePath =
-        "C:/Users/Coen Neefjes/IdeaProjects/Internettechnologie/src/files/received_" + parts[1];
+    String filePath = ClientApplication.DOWNLOAD_LOCATION + parts[1];
     String fileString = MessageBase64Handler.decode(parts[2]);
 
     try (FileOutputStream stream = new FileOutputStream(filePath)) {
