@@ -232,6 +232,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     String filePath = ClientApplication.DOWNLOAD_LOCATION + parts[1];
     String fileString = MessageBase64Handler.decode(parts[2]);
 
+    //TODO: create file before writing, otherwise error
+
     try (FileOutputStream stream = new FileOutputStream(filePath)) {
       stream.write(fileString.getBytes());
     } catch (IOException e) {
