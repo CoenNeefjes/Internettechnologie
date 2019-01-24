@@ -8,8 +8,14 @@ import java.util.HashSet;
 import java.util.Set;
 import server.Server;
 
+/**
+ * Class that starts the client application
+ *
+ * @author Coen Neefjes
+ */
 public class ClientApplication {
 
+  // Change this to the location you want files to be downloaded
   public static final String DOWNLOAD_LOCATION = "C:/Users/Coen Neefjes/IdeaProjects/Internettechnologie/src/files/received_";
 
   public static Set<String> clientNames = new HashSet<>();

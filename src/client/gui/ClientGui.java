@@ -17,6 +17,11 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.WindowConstants;
 
+/**
+ * GUI class for the client application
+ *
+ * @author Coen Neefjes
+ */
 public class ClientGui extends JFrame {
 
   private JPanel rootPanel;
@@ -61,10 +66,12 @@ public class ClientGui extends JFrame {
   }
 
   /* -------------- Variables -------------- */
+
   private MessageProcessor messageProcessor;
   private String userName;
 
   /* -------------- Setters -------------- */
+
   public void setUserName(String userName) {
     this.userName = userName;
   }
@@ -115,6 +122,7 @@ public class ClientGui extends JFrame {
   }
 
   /* -------------- ActionListeners -------------- */
+
   private void sendMessage(ActionEvent e) {
     String recipient = this.recipient.getText();
     if (recipient.equals("All")) {
@@ -170,6 +178,7 @@ public class ClientGui extends JFrame {
   }
 
   /* -------------- UI Components -------------- */
+
   public void errorBox(String infoMessage) {
     JOptionPane.showMessageDialog(null, infoMessage, "Error",
         JOptionPane.INFORMATION_MESSAGE);
@@ -203,7 +212,5 @@ public class ClientGui extends JFrame {
       return null;
     }
   }
-
-  /* -------------- Logic Methods -------------- */
 
 }

@@ -6,6 +6,12 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * Abstract class that handles incoming messages.
+ * Should be implemented differently in client and server
+ *
+ * @author Coen Neefjes
+ */
 public abstract class MessageHandler {
 
   protected InputStream inputStream;
@@ -18,6 +24,10 @@ public abstract class MessageHandler {
     this.writer = new PrintWriter(socket.getOutputStream());
   }
 
+  /**
+   * Checks what message has been received and sends it to the correct handle method
+   * @param reader The BufferedReader that receives messages
+   */
   protected void receiveMessage(BufferedReader reader) {
     try {
       String line = "";
