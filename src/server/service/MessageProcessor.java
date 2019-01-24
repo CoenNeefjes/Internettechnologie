@@ -334,9 +334,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   @Override
   protected void handleCryptoKeyMessage(String line) {
     String[] parts = line.substring(5).split(" ");
-    client.setKey(parts[0]);
-    client.setIv(parts[1]);
-    client.initEncryption();
+    client.initEncryption(parts[0], parts[1]);
     returnOkMessage(line);
   }
 

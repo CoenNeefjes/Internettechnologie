@@ -36,8 +36,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   private CopyOnWriteArrayList<String> sentCommands = new CopyOnWriteArrayList<>();
 
-  private Cipher encryptCipher;
-  private Cipher decryptCipher;
+  private CryptographyHandler cryptographyHandler;
 
   public MessageProcessor(Socket serverSocket) throws IOException {
     super(serverSocket);
@@ -53,7 +52,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
   }
 
   public void sendPrivateMessage(String messageWithoutMessageType) {
-    sendMessage(MsgType.PMSG + " " + encrypt(messageWithoutMessageType));
+    sendMessage(MsgType.PMSG + " " + cryptographyHandler.encrypt(messageWithoutMessageType));
   }
 
   public void sendMessage(String message) {
@@ -91,7 +90,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handlePrivateMessage(String line) {
-    line = decrypt(line.substring(5));
+    line = cryptographyHandler.decrypt(line.substring(5));
     System.out.println("decrypted private message: " + line);
     String sender = line.split(" ")[0];
     String message = line.substring(sender.length() + 1);
@@ -208,7 +207,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
             clientGui.receiveMessage(MsgType.FILE, "Server", "Successfully sent the file");
             break;
           case "PMSG":
-            String decrypted = decrypt(parts[1]);
+            String decrypted = cryptographyHandler.decrypt(parts[1]);
             String name = decrypted.split(" ")[0];
             clientGui.receiveMessage(MsgType.PMSG, "You to " + name,
                 decrypted.substring(name.length() + 1));
@@ -277,32 +276,10 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
-  private String decrypt(String encryptedMessage) {
-    return CryptographyHandler.decrypt(decryptCipher, encryptedMessage);
-  }
-
-  private String encrypt(String plainText) {
-    return CryptographyHandler.encrypt(encryptCipher, plainText);
-  }
-
   private void initEncryption() {
-    try {
-      // Generate key and initialisation vector
-      RandomString randomStringGenerator = new RandomString();
-      String key = randomStringGenerator.nextString();
-      String initVector = randomStringGenerator.nextString();
-      // Create the ciphers
-      IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
-      SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
-      encryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
-      encryptCipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
-      decryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
-      decryptCipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
-      // Send the key and iv to the server
-      sendMessage(MsgType.CRYP + " " + key + " " + initVector);
-    } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException | InvalidAlgorithmParameterException e) {
-      e.printStackTrace();
-    }
+    cryptographyHandler = new CryptographyHandler();
+    sendMessage(MsgType.CRYP + " " + cryptographyHandler.getKey() + " " + cryptographyHandler
+        .getInitVector());
   }
 
   private void initClientGui(String userName) {

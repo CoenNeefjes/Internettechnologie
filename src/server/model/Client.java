@@ -20,11 +20,8 @@ public class Client {
   // PING PONG
   private boolean receivedPong;
 
-  // Encryption variables
-  private Cipher encryptCipher;
-  private Cipher decryptCipher;
-  private String key;
-  private String iv;
+  // Encryption
+  private CryptographyHandler cryptographyHandler;
 
   public Client(Socket clientSocket, String name) {
     this.clientSocket = clientSocket;
@@ -40,14 +37,6 @@ public class Client {
     return name;
   }
 
-  public void setKey(String key) {
-    this.key = key;
-  }
-
-  public void setIv(String iv) {
-    this.iv = iv;
-  }
-
   public void setReceivedPong(boolean state) {
     this.receivedPong = state;
   }
@@ -57,24 +46,15 @@ public class Client {
   }
 
   public String getDecryptedMessage(String encryptedMessage) {
-    return CryptographyHandler.decrypt(decryptCipher, encryptedMessage);
+    return cryptographyHandler.decrypt(encryptedMessage);
   }
 
   public String encryptMessage(String plainText) {
-    return CryptographyHandler.encrypt(encryptCipher, plainText);
+    return cryptographyHandler.encrypt(plainText);
   }
 
-  public void initEncryption() {
-    try {
-      IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes("UTF-8"));
-      SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
-      encryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
-      encryptCipher.init(Cipher.ENCRYPT_MODE, skeySpec, ivParameterSpec);
-      decryptCipher = Cipher.getInstance(CryptographyHandler.CIPHER_PROVIDER);
-      decryptCipher.init(Cipher.DECRYPT_MODE, skeySpec, ivParameterSpec);
-    } catch (NoSuchAlgorithmException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchPaddingException | UnsupportedEncodingException e) {
-      e.printStackTrace();
-    }
+  public void initEncryption(String key, String initialisationVector) {
+    cryptographyHandler = new CryptographyHandler(key, initialisationVector);
   }
 
 }
