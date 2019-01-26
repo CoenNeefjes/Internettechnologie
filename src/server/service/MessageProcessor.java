@@ -205,8 +205,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleGroupMessage(String line) {
-    String groupName = line.split(" ")[0];
-    String message = line.substring(groupName.length() + 1);
+    String groupName = line.substring(5).split(" ")[0];
+    String message = line.substring(5).substring(groupName.length() + 1);
 
     // Try to get the group
     Group group = Server.getGroupByName(groupName);
@@ -217,6 +217,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       if (group.getGroupMemberNames().contains(client.getName())) {
         // Check if the message is not empty
         if (StringValidator.validateMessageString(message)) {
+          // Return OK message
+          returnOkMessage(line);
           // Get all clients from group
           group.getGroupMembers().forEach(groupMember -> {
             try {
@@ -269,7 +271,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   @Override
   protected void handleKickGroupClientMessage(String line) {
-    String[] parts = line.split(" ");
+    String[] parts = line.substring(5).split(" ");
     if (parts.length != 2) {
       sendMessage(ErrorMessageConstructor.invalidInputError(), writer);
       return;
@@ -287,6 +289,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
           // Check if the user that needs to be kicked is in the group
           Client client = group.getGroupMemberByName(clientName);
           if (client != null) {
+            // Return OK message
+            returnOkMessage(line);
             // Kick the client
             group.removeGroupMember(client);
             notifyClientOfKick(client, groupName);

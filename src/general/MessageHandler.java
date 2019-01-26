@@ -63,15 +63,13 @@ public abstract class MessageHandler {
           handleJoinGroupMessage(line);
           break;
         case "GMSG":
-          handleGroupMessage(line.substring(5));
-          //TODO: return ok
+          handleGroupMessage(line);
           break;
         case "LGRP":
           handleLeaveGroupMessage(line);
           break;
         case "KGCL":
-          handleKickGroupClientMessage(line.substring(5));
-          //TODO: return ok
+          handleKickGroupClientMessage(line);
           break;
         case "PING":
           handlePingMessage();

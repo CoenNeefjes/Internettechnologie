@@ -16,7 +16,7 @@ import server.Server;
 public class ClientApplication {
 
   // Change this to the location you want files to be downloaded
-  public static final String DOWNLOAD_LOCATION = "C:/Users/Coen Neefjes/IdeaProjects/Internettechnologie/src/files/received_";
+  public static final String DOWNLOAD_LOCATION = "C:/Users/coen/IdeaProjects/Internettechnologie/src/files/received_";
 
   public static Set<String> clientNames = new HashSet<>();
   public static Set<String> groupNames = new HashSet<>();

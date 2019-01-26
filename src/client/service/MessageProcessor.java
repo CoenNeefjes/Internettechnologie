@@ -10,12 +10,18 @@ import general.MessageMD5Encoder;
 import general.MsgType;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -180,6 +186,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
    */
   @Override
   protected void handleGroupMessage(String line) {
+    line = line.substring(5);
     String groupName = line.split(" ")[0];
     String sender = line.split(" ")[1];
     String message = line.substring(groupName.length() + sender.length() + 2);
@@ -204,6 +211,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
    */
   @Override
   protected void handleKickGroupClientMessage(String line) {
+    // Remove message type
+    line = line.substring(5);
     // Client should not receive kick group client message
     System.out.println("KGCL message=" + line);
     String[] parts = line.split(" ");
@@ -277,8 +286,8 @@ public class MessageProcessor extends MessageHandler implements Runnable {
             break;
           case "HELO":
             loginScreen.setVisible(false);
-            initClientGui(command.substring(5));
             initEncryption();
+            initClientGui(command.substring(5));
             break;
           case "FILE":
             clientGui.receiveMessage(MsgType.FILE, "Server", "Successfully sent the file");
@@ -320,10 +329,29 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     String filePath = ClientApplication.DOWNLOAD_LOCATION + parts[1];
     String fileString = MessageBase64Handler.decode(parts[2]);
 
+    System.out.println("filePath: " + filePath);
+
     //TODO: create file before writing, otherwise error
 
-    try (FileOutputStream stream = new FileOutputStream(filePath)) {
-      stream.write(fileString.getBytes());
+//    try (FileOutputStream stream = new FileOutputStream(filePath)) {
+//      stream.write(fileString.getBytes());
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
+
+//    Writer writer = null;
+//    try {
+//      writer = new BufferedWriter(new OutputStreamWriter(
+//          new FileOutputStream(filePath), "utf-8"));
+//      writer.write(fileString);
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } finally {
+//      try {writer.close();} catch (Exception ex) {/*ignore*/}
+//    }
+
+    try {
+      Files.write(Paths.get(filePath), fileString.getBytes("utf-8"));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -339,8 +367,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
    * @param filePath The filePath of the file to be sent
    */
   public void shareFile(String recipient, String filePath) {
-    String[] parts = filePath.split("/");
-    String fileName = parts[parts.length - 1];
+    String fileName = new File(filePath).getName();
 
     FileInputStream fileInputStream = null;
     BufferedInputStream bufferedInputStream = null;
@@ -352,7 +379,7 @@ public class MessageProcessor extends MessageHandler implements Runnable {
       bufferedInputStream.read(fileBytes, 0, fileBytes.length);
       sendMessage("FILE " + recipient + " " + fileName + " " + MessageBase64Handler
           .encode(new String(fileBytes)));
-      System.out.println("Sending " + filePath + "(" + fileBytes.length + " bytes)");
+      System.out.println("Sending file at path: " + filePath + "(" + fileBytes.length + " bytes)");
     } catch (IOException e) {
       e.printStackTrace();
       clientGui.errorBox("Could not find or send specified file");
