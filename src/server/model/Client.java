@@ -11,6 +11,9 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+/**
+ * Class that models a Client object
+ */
 public class Client {
 
   // Client variables
@@ -37,6 +40,10 @@ public class Client {
     return name;
   }
 
+  /**
+   * Sets the receivedPong boolean to a new state
+   * @param state true or false
+   */
   public void setReceivedPong(boolean state) {
     this.receivedPong = state;
   }
@@ -53,6 +60,11 @@ public class Client {
     return cryptographyHandler.encrypt(plainText);
   }
 
+  /**
+   * Initialises the cryptographyHandler variable with the given key and vector
+   * @param key The public key
+   * @param initialisationVector The initialisation vector
+   */
   public void initEncryption(String key, String initialisationVector) {
     cryptographyHandler = new CryptographyHandler(key, initialisationVector);
   }

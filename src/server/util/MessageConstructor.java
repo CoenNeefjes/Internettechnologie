@@ -6,6 +6,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
+/**
+ * Class with only static Strings representing all messages the server can respond with
+ *
+ * @author Coen Neefjes
+ */
 public class MessageConstructor {
 
   public static String okMessage(String message) {

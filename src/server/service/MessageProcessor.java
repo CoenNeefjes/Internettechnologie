@@ -13,6 +13,11 @@ import server.util.ErrorMessageConstructor;
 import server.util.MessageConstructor;
 import server.util.StringValidator;
 
+/**
+ * Class that extends the MessageHandler and implements its methods for the client
+ *
+ * @author Coen Neefjes
+ */
 public class MessageProcessor extends MessageHandler implements Runnable {
 
   private Client client;
@@ -30,16 +35,32 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Sends a message to the client of which the writer belongs to
+   *
+   * @param message The message String that needs to be sent
+   * @param writer The writer of the client the message should go to
+   */
   private void sendMessage(String message, PrintWriter writer) {
     System.out.println("Sending message: " + message);
     writer.println(message);
     writer.flush();
   }
 
+  /**
+   * Sends an +OK message to the client of this MessageProcessor
+   *
+   * @param line The line that needs to be converted to an +OK message
+   */
   private void returnOkMessage(String line) {
     sendMessage(MessageConstructor.okMessage(line), writer);
   }
 
+  /**
+   * Sends a message to all connected clients
+   *
+   * @param line The message
+   */
   private void broadcastMessage(String line) throws IOException {
     for (Client client : Server.clients) {
       Socket socket = client.getClientSocket();
@@ -48,6 +69,14 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Handles the receiving of a HELO message If the message is validated this method adds this
+   * client to the client list on the server and returns an +OK message and starts a heartBeat
+   * Thread and sends every connected client a new version of the client list and sends this client
+   * a list of available groups
+   *
+   * @param line The message
+   */
   @Override
   protected void handleHelloMessage(String line) {
     try {
@@ -81,6 +110,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Receives a BCST message and sends it to all connected clients
+   *
+   * @param line The message
+   */
   @Override
   protected void handleBroadCastMessage(String line) {
     try {
@@ -95,6 +129,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Receives a QUIT message and returns a QUIT message Then it removes this client from all groups
+   * and the client list on the server After that it sends the new client list to all connected
+   * clients
+   */
   @Override
   protected void handleQuitMessage() throws IOException {
     // Send response QUIT message to the user
@@ -113,6 +152,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     socket.close();
   }
 
+  /**
+   * Sends the list of connected clients to this client
+   *
+   * @param line The client list message
+   */
   @Override
   protected void handleClientListMessage(String line) {
     String clientListString = "";
@@ -122,10 +166,18 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     sendMessage(MessageConstructor.clientListMessage(clientListString), writer);
   }
 
+  /**
+   * Receives a private message. Decrypts it. Then encrypts it with the Cipher of the person it is
+   * to be sent to. Then sends the message to that person.
+   *
+   * @param line The encrypted private message
+   */
   @Override
   protected void handlePrivateMessage(String line) {
+    // Decrypt the message
     String decryptedLine = client.getDecryptedMessage(line.substring(5));
 
+    // Get the message info
     String recipientName = decryptedLine.split(" ")[0];
     String message = decryptedLine.substring(recipientName.length() + 1);
 
@@ -159,9 +211,17 @@ public class MessageProcessor extends MessageHandler implements Runnable {
 
   }
 
+  /**
+   * Creates a new group upon receiving a create group message
+   *
+   * @param line The create group message
+   */
   @Override
   protected void handleCreateGroupMessage(String line) {
+    // Remove the message prefix
     String groupName = line.substring(5);
+
+    // Check if the group name is valid
     if (!StringValidator.validateNameString(groupName)) {
       sendMessage(ErrorMessageConstructor.invalidNameError(groupName), writer);
       return;
@@ -177,6 +237,10 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   *
+   * @param line
+   */
   @Override
   protected void handleGroupListMessage(String line) {
     String groupListString = "";
@@ -186,16 +250,22 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     sendMessage(MessageConstructor.groupListMessage(groupListString), writer);
   }
 
+  /**
+   * Lets the send of a join group message join that certain group
+   *
+   * @param line The join group message
+   */
   @Override
   protected void handleJoinGroupMessage(String line) {
     String groupName = line.substring(5);
     Group group = Server.getGroupByName(groupName);
+    // Check if the group exists
     if (group != null) {
+      // Check if the client is not already in that group
       if (!group.getGroupMemberNames().contains(client.getName())) {
         group.addGroupMember(client);
         returnOkMessage(line);
       } else {
-        // Client is already in group
         sendMessage(ErrorMessageConstructor.clientAlreadyInGroupError(), writer);
       }
     } else {
@@ -203,8 +273,14 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Receives a group message and sends it to all members of this group
+   *
+   * @param line The group message
+   */
   @Override
   protected void handleGroupMessage(String line) {
+    // Get the message info
     String groupName = line.substring(5).split(" ")[0];
     String message = line.substring(5).substring(groupName.length() + 1);
 
@@ -241,6 +317,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Removes a client from a group when receiving a leave group message
+   *
+   * @param line The leave group message
+   */
   @Override
   protected void handleLeaveGroupMessage(String line) {
     String groupName = line.substring(5);
@@ -269,6 +350,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Kicks a client from a group when this message was sent by the group owner
+   *
+   * @param line The kick group client message
+   */
   @Override
   protected void handleKickGroupClientMessage(String line) {
     String[] parts = line.substring(5).split(" ");
@@ -310,18 +396,27 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Handles receiving a Ping message
+   */
   @Override
   protected void handlePingMessage() {
     // Server should not receive ping message
     System.out.println("Server received ping message, this should not happen");
   }
 
+  /**
+   * Sets the receivedPong boolean in the client to true upon receiving a Pong from this client
+   */
   @Override
   protected void handlePongMessage() {
     Server.getClientByName(client.getName()).setReceivedPong(true);
     System.out.println("Received PONG from " + client.getName());
   }
 
+  /**
+   * Handles receiving an Error message
+   */
   @Override
   protected void handleErrorMessage(String line) {
     // Server should not receive error message
@@ -329,12 +424,21 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     System.out.println("Error message is: " + line);
   }
 
+  /**
+   * Handles receiving an OK message
+   */
   @Override
   protected void handleOkMessage(String line) {
     // Server should not receive error message
     System.out.println("Server received ok message, this should not happen");
+    System.out.println("OK message is: " + line);
   }
 
+  /**
+   * Sets up the encryption / decryption process of this client
+   *
+   * @param line The crypto key message
+   */
   @Override
   protected void handleCryptoKeyMessage(String line) {
     String[] parts = line.substring(5).split(" ");
@@ -342,6 +446,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     returnOkMessage(line);
   }
 
+  /**
+   * Receives a file message and forwards it to the client it needs to be sent to
+   *
+   * @param line The file message
+   */
   @Override
   protected void handleFileMessage(String line) {
     String[] parts = line.substring(5).split(" ");
@@ -365,6 +474,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Sends the list of connected clients to all connected clients
+   */
   private void broadCastClientList() throws IOException {
     String clientListString = "";
     for (Client client : Server.clients) {
@@ -378,6 +490,9 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Sends the list of all existing groups to all connected clients
+   */
   private void broadCastGroupList() {
     String groupListString = "";
     for (Group group : Server.groups) {
@@ -395,6 +510,14 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     }
   }
 
+  /**
+   * Sends a message to all group members that a person has left the group
+   *
+   * @param group The group that is notified
+   * @param clientName The name of the client that left
+   * @param voluntarily True if the person left by sending a leave group message, false if the
+   * person left by a kick group client message
+   */
   private void notifyGroupOfLeave(Group group, String clientName, boolean voluntarily) {
     group.getGroupMembers().forEach(groupMember -> {
       try {
@@ -409,6 +532,11 @@ public class MessageProcessor extends MessageHandler implements Runnable {
     });
   }
 
+  /**
+   * Sends a message to the client that he has been kicked from a group
+   * @param client The client that was kicked
+   * @param groupName The name of the group he was kicked from
+   */
   private void notifyClientOfKick(Client client, String groupName) {
     try {
       sendMessage(MessageConstructor.notifyClientOfKickMessage(groupName),

@@ -1,5 +1,10 @@
 package server.util;
 
+/**
+ * Class with only static Strings representing all the error messages the server can return
+ *
+ * @author Coen Neefjes
+ */
 public class ErrorMessageConstructor {
 
   public static String clientNotFoundError() {

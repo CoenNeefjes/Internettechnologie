@@ -7,6 +7,11 @@ import java.net.Socket;
 import server.Server;
 import server.model.Client;
 
+/**
+ * Class that checks if a client is still connected
+ *
+ * @author Coen Neefjes
+ */
 public class PingPong implements Runnable {
 
   private OutputStream outputStream;

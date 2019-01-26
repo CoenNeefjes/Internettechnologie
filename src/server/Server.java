@@ -16,6 +16,11 @@ import server.model.Client;
 import server.model.Group;
 import server.service.MessageProcessor;
 
+/**
+ * Class that starts the server
+ *
+ * @author Coen Neefjes
+ */
 public class Server {
 
   public static final int SERVER_PORT = 1337;
@@ -56,14 +61,27 @@ public class Server {
     }
   }
 
+  /**
+   * Gets all the user names the server has saved
+   * @return List of Strings containing all client names
+   */
   public static List<String> getUserNames() {
     return clients.stream().map(Client::getName).collect(Collectors.toList());
   }
 
+  /**
+   * Gets all the group names the servers has saved
+   * @return List of Strings containing all group names
+   */
   public static List<String> getGroupNames() {
     return groups.stream().map(Group::getName).collect(Collectors.toList());
   }
 
+  /**
+   * Gets a group by its name
+   * @param groupName The name of the group
+   * @return The Group with the given name or null
+   */
   public static Group getGroupByName(String groupName) {
     for (Group group : groups) {
       if (group.getName().equals(groupName)) {
@@ -73,6 +91,11 @@ public class Server {
     return null;
   }
 
+  /**
+   * Gets a Client by its name
+   * @param clientName The name of the Client
+   * @return The Client with the given name or null
+   */
   public static Client getClientByName(String clientName) {
     for (Client client : clients) {
       if (client.getName().equals(clientName)) {
@@ -82,6 +105,10 @@ public class Server {
     return null;
   }
 
+  /**
+   * Removes the given Client from the Client List and from all Groups
+   * @param client The Client that needs to be removed
+   */
   public static void removeClient(Client client) {
     clients.remove(client);
     groups.forEach(group -> {
